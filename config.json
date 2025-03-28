@@ -38,5 +38,9 @@
         "description": "Scrapes news articles from configured sites"
       }
     ]
+  },
+  "redis": {
+    "address": "localhost:6379",
+    "password": ""
   }
 }

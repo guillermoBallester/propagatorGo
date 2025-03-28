@@ -10,8 +10,26 @@ services:
     restart: "no"  # For easier debugging
     environment:
       - TZ=UTC
+    volumes:
+      - ./config.json:/app/config.json
+    depends_on:
+      - redis
     networks:
       - propagatorGo-network
+
+  redis:
+    image: redis:6-alpine
+    container_name: propagatorGo-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - propagatorGo-network
+
+volumes:
+  redis-data:
 
 networks:
   propagatorGo-network:

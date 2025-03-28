@@ -12,6 +12,7 @@ type Config struct {
 	App       AppConfig       `json:"app"`
 	Scraper   ScraperConfig   `json:"scraper"`
 	Scheduler SchedulerConfig `json:"scheduler"`
+	Redis     RedisConfig     `json:"redis"`
 }
 
 // SiteConfig stores the selector configuration for each website
@@ -60,6 +61,12 @@ type JobConfig struct {
 	RetryCount  int           `json:"retryCount"`
 	Enabled     bool          `json:"enabled"`
 	Description string        `json:"description"`
+}
+
+// RedisConfig represents Redis connection settings
+type RedisConfig struct {
+	Address  string `json:"address"`
+	Password string `json:"password"`
 }
 
 // LoadConfig loads the configuration from a JSON file

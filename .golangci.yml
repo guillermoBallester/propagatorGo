@@ -1,0 +1,29 @@
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  enable:
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gosec
+    - gofmt
+    - goimports
+    - misspell
+    - revive
+
+linters-settings:
+  errcheck:
+    check-type-assertions: true
+  goimports:
+    local-prefixes: github.com/guillermoballester/stockalpha
+
+issues:
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gosec

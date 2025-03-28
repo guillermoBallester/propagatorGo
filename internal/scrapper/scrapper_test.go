@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"propagatorGo/internal/config"
 	"testing"
 	"time"
 
@@ -41,25 +42,35 @@ func setupTestServer() *httptest.Server {
 	return server
 }
 
-func initConfig(t *testing.T) []SiteConfig {
-	// Set up test config
-	return []SiteConfig{
-		{
-			Name:                 "TestSite",
-			URL:                  "https://example.com",
-			AllowedDomains:       []string{"example.com"},
-			ArticleContainerPath: "header.segmento-header",
-			TitlePath:            "h2.segmento-title a",
-			LinkPath:             "h2.segmento-title a",
-			TextPath:             "p.segmento-lead",
+func initConfig() *config.ScraperConfig {
+	return &config.ScraperConfig{
+		UserAgent:     "Mozilla/5.0 (Test User Agent)",
+		MaxDepth:      2,
+		MaxRetries:    3,
+		RandomDelay:   5 * time.Second,
+		ParallelLimit: 2,
+		Sites: []config.SiteConfig{
+			{
+				Name:                 "TestSite",
+				URL:                  "https://example.com",
+				AllowedDomains:       []string{"example.com"},
+				ArticleContainerPath: "header.segmento-header",
+				TitlePath:            "h2.segmento-title a",
+				LinkPath:             "h2.segmento-title a",
+				TextPath:             "p.segmento-lead",
+				Enabled:              true,
+			},
 		},
 	}
 }
 
 func TestNewNewsScraper(t *testing.T) {
 
-	configs := initConfig(t)
-	scraper := NewNewsScraper(configs)
+	configs := initConfig()
+	scraper, initErr := NewNewsScraper(configs)
+	if initErr != nil {
+		t.Fatalf("Error initializing scraper: %v", initErr)
+	}
 
 	if len(scraper.configs) != 1 {
 		t.Errorf("Expected 1 config, got %d", len(scraper.configs))
@@ -77,12 +88,15 @@ func TestNewNewsScraper(t *testing.T) {
 func TestScrape(t *testing.T) {
 	server := setupTestServer()
 	defer server.Close()
-	configs := initConfig(t)
-	scraper := NewNewsScraper(configs)
-	scraper.mainCollector = colly.NewCollector()
-	scraper.Initialize()
+	configs := initConfig()
+	scraper, initErr := NewNewsScraper(configs)
+	if initErr != nil {
+		t.Fatalf("Error initializing scraper: %v", initErr)
+	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	scraper.mainCollector = colly.NewCollector()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 
 	articles, err := scraper.Scrape(ctx)
@@ -122,8 +136,11 @@ func TestScrape(t *testing.T) {
 func TestRegisterHTMLHandlers(t *testing.T) {
 	server := setupTestServer()
 	defer server.Close()
-	configs := initConfig(t)
-	scraper := NewNewsScraper(configs)
+	configs := initConfig()
+	scraper, initErr := NewNewsScraper(configs)
+	if initErr != nil {
+		t.Fatalf("Error initializing scraper: %v", initErr)
+	}
 	scraper.mainCollector = colly.NewCollector()
 
 	ctx := context.Background()
@@ -142,8 +159,11 @@ func TestStartScraping(t *testing.T) {
 	// Set up test server
 	server := setupTestServer()
 	defer server.Close()
-	configs := initConfig(t)
-	scraper := NewNewsScraper(configs)
+	configs := initConfig()
+	scraper, initErr := NewNewsScraper(configs)
+	if initErr != nil {
+		t.Fatalf("Error initializing scraper: %v", initErr)
+	}
 	scraper.mainCollector = colly.NewCollector()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)

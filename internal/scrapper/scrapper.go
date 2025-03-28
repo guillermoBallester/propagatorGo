@@ -33,7 +33,7 @@ type NewsScraper struct {
 }
 
 // NewNewsScraper creates a new instance of the scraper
-func NewNewsScraper(cfg *config.ScraperConfig) *NewsScraper {
+func NewNewsScraper(cfg *config.ScraperConfig) (*NewsScraper, error) {
 	var allowedDomains []string
 	for _, SiteConfig := range cfg.Sites {
 		allowedDomains = append(allowedDomains, SiteConfig.AllowedDomains...)
@@ -45,25 +45,25 @@ func NewNewsScraper(cfg *config.ScraperConfig) *NewsScraper {
 		colly.MaxDepth(cfg.MaxDepth),
 	)
 
+	err := col.Limit(&colly.LimitRule{
+		DomainGlob:  "*",
+		RandomDelay: 10 * time.Second,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	col.OnError(func(r *colly.Response, err error) {
+		log.Printf("Error scraping %s: %s", r.Request.URL, err)
+	})
+
 	scraper := &NewsScraper{
 		configs:       cfg.Sites,
 		articles:      make([]ArticleData, 0),
 		mainCollector: col,
 	}
 
-	return scraper
-}
-
-// Initialize sets up the collectors and prepares them for scraping
-func (s *NewsScraper) Initialize() {
-	s.mainCollector.Limit(&colly.LimitRule{
-		DomainGlob:  "*",
-		RandomDelay: 10 * time.Second,
-	})
-
-	s.mainCollector.OnError(func(r *colly.Response, err error) {
-		log.Printf("Error scraping %s: %s", r.Request.URL, err)
-	})
+	return scraper, nil
 }
 
 // Scrape extracts information from an article preview
@@ -82,18 +82,6 @@ func (s *NewsScraper) Scrape(ctx context.Context) ([]ArticleData, error) {
 	}
 
 	return s.GetArticles(), nil
-}
-
-// Start begins the scraping process for all configurations
-func (s *NewsScraper) Start() {
-	for _, config := range s.configs {
-		fmt.Printf("Starting to scrape: %s\n", config.Name)
-		err := s.mainCollector.Visit(config.URL)
-		if err != nil {
-			log.Printf("Error visiting %s: %s", config.URL, err)
-		}
-	}
-	s.mainCollector.Wait()
 }
 
 // createContextCollector creates a collector with context cancellation

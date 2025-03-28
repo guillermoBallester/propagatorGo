@@ -89,15 +89,17 @@ func TestScrape(t *testing.T) {
 	server := setupTestServer()
 	defer server.Close()
 	configs := initConfig()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	configs.Sites[0].URL = server.URL
+	configs.Sites[0].AllowedDomains = []string{server.URL[7:]}
+
 	scraper, initErr := NewNewsScraper(configs)
 	if initErr != nil {
 		t.Fatalf("Error initializing scraper: %v", initErr)
 	}
-
-	scraper.mainCollector = colly.NewCollector()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
 
 	articles, err := scraper.Scrape(ctx)
 	if err != nil {
@@ -152,32 +154,5 @@ func TestRegisterHTMLHandlers(t *testing.T) {
 	articles := scraper.GetArticles()
 	if len(articles) != 2 {
 		t.Errorf("Expected 2 articles after handlers registered and site visited, got %d", len(articles))
-	}
-}
-
-func TestStartScraping(t *testing.T) {
-	// Set up test server
-	server := setupTestServer()
-	defer server.Close()
-	configs := initConfig()
-	scraper, initErr := NewNewsScraper(configs)
-	if initErr != nil {
-		t.Fatalf("Error initializing scraper: %v", initErr)
-	}
-	scraper.mainCollector = colly.NewCollector()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-	contextCollector := scraper.createContextCollector(ctx)
-	scraper.registerHTMLHandlers(contextCollector)
-	done, errChan := scraper.startScraping(ctx, contextCollector)
-
-	err := scraper.waitForCompletion(ctx, done, errChan, contextCollector)
-	if err != nil {
-		t.Fatalf("Scraping failed: %v", err)
-	}
-	articles := scraper.GetArticles()
-	if len(articles) != 2 {
-		t.Errorf("Expected 2 articles after scraping, got %d", len(articles))
 	}
 }

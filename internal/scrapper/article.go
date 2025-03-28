@@ -55,7 +55,7 @@ func (s *NewsScraper) extractArticle(e *colly.HTMLElement, config SiteConfig) Ar
 	}
 
 	if config.TextPath != "" {
-		article.Text = strings.TrimSpace(e.DOM.Parent().Find(config.TextPath).Text())
+		article.Text = strings.TrimSpace(e.DOM.Find(config.TextPath).Text())
 	}
 
 	return article

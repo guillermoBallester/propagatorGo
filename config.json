@@ -1,0 +1,42 @@
+{
+  "app": {
+    "name": "PropagatorGo",
+    "version": "1.0.0",
+    "port": 8081,
+    "logLevel": "info",
+    "apiPrefix": "/propagatorGo/v1",
+    "env": "development"
+  },
+  "scraper": {
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36",
+    "maxDepth": 2,
+    "maxRetries": 3,
+    "randomDelay": 5000000000,
+    "parallelLimit": 2,
+    "sites": [
+      {
+        "name": "OkDiario",
+        "url": "https://okdiario.com",
+        "allowedDomains": ["okdiario.com", "www.okdiario.com"],
+        "articleContainerPath": "header.segmento-header",
+        "titlePath": "h2.segmento-title a",
+        "linkPath": "h2.segmento-title a",
+        "textPath": "p.segmento-lead",
+        "enabled": true
+      }
+    ]
+  },
+  "scheduler": {
+    "defaultTimeout": 300000000000,
+    "jobs": [
+      {
+        "name": "news-scraper",
+        "cronExpr": "0 */5 * * * *",
+        "timeout": 180000000000,
+        "retryCount": 2,
+        "enabled": true,
+        "description": "Scrapes news articles from configured sites"
+      }
+    ]
+  }
+}

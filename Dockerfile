@@ -26,4 +26,4 @@ COPY --from=builder /app/propagatorGo /app/propagatorGo
 RUN ls -la /app
 
 # Run the application
-CMD ["/app/propagator"]
+CMD ["/app/propagatorGo"]

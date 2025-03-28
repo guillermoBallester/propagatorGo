@@ -3,6 +3,8 @@ package scheduler
 import (
 	"context"
 	"fmt"
+	"log"
+	"propagatorGo/internal/config"
 	"sync"
 	"time"
 
@@ -39,17 +41,52 @@ type Scheduler struct {
 	jobsMutex sync.RWMutex
 	ctx       context.Context
 	cancel    context.CancelFunc
+	config    *config.SchedulerConfig
 }
 
 // NewScheduler creates a new scheduler
-func NewScheduler() *Scheduler {
+func NewScheduler(cfg *config.SchedulerConfig) *Scheduler {
 	ctx, cancel := context.WithCancel(context.Background())
 	return &Scheduler{
 		cron:   cron.New(cron.WithSeconds()),
 		jobs:   make(map[string]*Job),
 		ctx:    ctx,
 		cancel: cancel,
+		config: cfg,
 	}
+}
+
+func (s *Scheduler) Initialize() error {
+	for _, jobConfig := range s.config.Jobs {
+		if !jobConfig.Enabled {
+			continue
+		}
+
+		placeholderFunc := func(ctx context.Context) error {
+			return fmt.Errorf("job implementation not registered")
+		}
+
+		err := s.AddJob(jobConfig.Name, jobConfig.CronExpr, jobConfig.Timeout, placeholderFunc)
+		if err != nil {
+			return fmt.Errorf("cannot add job %s: %w", jobConfig.Name, err)
+		}
+	}
+	log.Println("scheduler initialized")
+	return nil
+}
+
+// RegisterJobHandler registers implementation for a pre-configured job
+func (s *Scheduler) RegisterJobHandler(name string, handler func(ctx context.Context) error) error {
+	s.jobsMutex.Lock()
+	defer s.jobsMutex.Unlock()
+
+	job, exists := s.jobs[name]
+	if !exists {
+		return fmt.Errorf("job '%s' not found", name)
+	}
+
+	job.Func = handler
+	return nil
 }
 
 // AddJob schedules a new job with a cron expression
@@ -222,12 +259,14 @@ func (s *Scheduler) RemoveJob(name string) error {
 // Start begins the scheduler
 func (s *Scheduler) Start() {
 	s.cron.Start()
+	log.Println("Scheduler started")
 }
 
 // Stop gracefully shuts down the scheduler
 func (s *Scheduler) Stop() {
 	s.cancel()
 	s.cron.Stop()
+	log.Println("Scheduler stopped")
 }
 
 // PauseJob temporarily disables a job

@@ -7,6 +7,16 @@ import (
 	"github.com/gocolly/colly"
 )
 
+// ArticleData represents the extracted data from an article
+type ArticleData struct {
+	Title     string
+	URL       string
+	Text      string
+	ImageURL  string
+	SiteName  string
+	ScrapedAt time.Time `json:"scraped_at"`
+}
+
 // saveArticle safely adds an article to the collection
 func (s *NewsScraper) saveArticle(article ArticleData) {
 	s.articleMutex.Lock()

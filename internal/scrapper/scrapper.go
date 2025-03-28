@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"propagatorGo/internal/config"
 	"sync"
 	"time"
 
@@ -12,49 +13,40 @@ import (
 
 // SiteConfig stores the selector configuration for each website
 type SiteConfig struct {
-	Name                 string   // Name of the website
-	URL                  string   // Main URL of the website
-	AllowedDomains       []string // Allowed domains for scraping
-	ArticleContainerPath string   // Selector for article containers
-	TitlePath            string   // Selector for article titles
-	LinkPath             string   // Selector for article links
-	TextPath             string   // Selector for article text/summary
-	ImagePath            string   // Selector for article images (optional)
-}
-
-// ArticleData represents the extracted data from an article
-type ArticleData struct {
-	Title     string
-	URL       string
-	Text      string
-	ImageURL  string
-	SiteName  string
-	ScrapedAt time.Time `json:"scraped_at"`
+	Name                 string   `json:"name"`
+	URL                  string   `json:"url"`
+	AllowedDomains       []string `json:"allowedDomains"`
+	ArticleContainerPath string   `json:"articleContainerPath"`
+	TitlePath            string   `json:"titlePath"`
+	LinkPath             string   `json:"linkPath"`
+	TextPath             string   `json:"textPath"`
+	ImagePath            string   `json:"imagePath,omitempty"`
+	Enabled              bool     `json:"enabled"`
 }
 
 // NewsScraper is the main manager for scraping news
 type NewsScraper struct {
-	configs       []SiteConfig
+	configs       []config.SiteConfig
 	mainCollector *colly.Collector
 	articles      []ArticleData
 	articleMutex  sync.Mutex
 }
 
 // NewNewsScraper creates a new instance of the scraper
-func NewNewsScraper(configs []SiteConfig) *NewsScraper {
+func NewNewsScraper(cfg *config.ScraperConfig) *NewsScraper {
 	var allowedDomains []string
-	for _, config := range configs {
-		allowedDomains = append(allowedDomains, config.AllowedDomains...)
+	for _, SiteConfig := range cfg.Sites {
+		allowedDomains = append(allowedDomains, SiteConfig.AllowedDomains...)
 	}
 
 	col := colly.NewCollector(
 		colly.AllowedDomains(allowedDomains...),
-		colly.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36"),
-		colly.MaxDepth(2),
+		colly.UserAgent(cfg.UserAgent),
+		colly.MaxDepth(cfg.MaxDepth),
 	)
 
 	scraper := &NewsScraper{
-		configs:       configs,
+		configs:       cfg.Sites,
 		articles:      make([]ArticleData, 0),
 		mainCollector: col,
 	}
@@ -127,7 +119,7 @@ func (s *NewsScraper) registerHTMLHandlers(collector *colly.Collector) {
 		siteConfig := config
 
 		collector.OnHTML(siteConfig.ArticleContainerPath, func(e *colly.HTMLElement) {
-			article := s.extractArticle(e, siteConfig)
+			article := s.extractArticle(e, SiteConfig(siteConfig))
 
 			if article.Title != "" && article.URL != "" {
 				s.saveArticle(article)
@@ -143,10 +135,10 @@ func (s *NewsScraper) startScraping(ctx context.Context, collector *colly.Collec
 	errChan := make(chan error, len(s.configs))
 
 	var wg sync.WaitGroup
-
 	// Start visiting URLs for each config
 	for _, config := range s.configs {
 		wg.Add(1)
+
 		go func(cfg SiteConfig) {
 			defer wg.Done()
 
@@ -164,7 +156,7 @@ func (s *NewsScraper) startScraping(ctx context.Context, collector *colly.Collec
 				log.Printf("Error visiting %s: %v", cfg.URL, err)
 				errChan <- fmt.Errorf("error scraping %s: %w", cfg.Name, err)
 			}
-		}(config)
+		}(SiteConfig(config))
 	}
 
 	// goroutine that manages completion signal

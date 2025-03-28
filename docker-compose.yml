@@ -1,0 +1,18 @@
+
+version: '3.8'
+
+services:
+  propagator:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: propagatorGo
+    restart: "no"  # For easier debugging
+    environment:
+      - TZ=UTC
+    networks:
+      - propagatorGo-network
+
+networks:
+  propagatorGo-network:
+    driver: bridge

@@ -7,12 +7,13 @@ import (
 	"github.com/gocolly/colly"
 )
 
+const href = "href"
+
 // ArticleData represents the extracted data from an article
 type ArticleData struct {
 	Title     string
 	URL       string
 	Text      string
-	ImageURL  string
 	SiteName  string
 	ScrapedAt time.Time `json:"scraped_at"`
 }
@@ -25,40 +26,34 @@ func (s *NewsScraper) saveArticle(article ArticleData) {
 	s.articles = append(s.articles, article)
 }
 
-// extractArticle parses HTML elements to extract article data
-func (s *NewsScraper) extractArticle(e *colly.HTMLElement, config SiteConfig) ArticleData {
-	article := ArticleData{
-		SiteName:  config.Name,
-		ScrapedAt: time.Now(),
-	}
+func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement, config SiteConfig) []ArticleData {
+	var articles []ArticleData
 
-	if config.TitlePath != "" {
-		e.ForEach(config.TitlePath, func(_ int, el *colly.HTMLElement) {
-			if article.Title == "" {
-				titleText := el.Text
-				titleText = strings.TrimPrefix(titleText, "::before")
-				titleText = strings.TrimSpace(titleText)
-				article.Title = titleText
-			}
-		})
-	}
+	e.ForEach("li", func(_ int, li *colly.HTMLElement) {
+		// Yahoo-specific extraction logic...
+		liClass := li.Attr("class")
+		if !strings.Contains(liClass, "stream-item") || !strings.Contains(liClass, "story-item") {
+			return
+		}
 
-	if config.LinkPath != "" {
-		e.ForEach(config.LinkPath, func(_ int, el *colly.HTMLElement) {
-			if article.URL == "" {
-				href := el.Attr("href")
-				if href != "" {
-					article.URL = e.Request.AbsoluteURL(href)
-				}
-			}
-		})
-	}
+		article := ArticleData{
+			SiteName:  config.Name,
+			Title:     li.ChildText("h3"),
+			URL:       li.ChildAttr("a", "href"),
+			Text:      li.ChildText("p"),
+			ScrapedAt: time.Now(),
+		}
 
-	if config.TextPath != "" {
-		article.Text = strings.TrimSpace(e.DOM.Find(config.TextPath).Text())
-	}
+		if !strings.HasPrefix(article.URL, "http") {
+			article.URL = e.Request.AbsoluteURL(article.URL)
+		}
 
-	return article
+		if article.Title != "" && article.URL != "" {
+			articles = append(articles, article)
+		}
+	})
+
+	return articles
 }
 
 // GetArticles returns the collected articles

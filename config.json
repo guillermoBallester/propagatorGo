@@ -15,13 +15,14 @@
     "parallelLimit": 2,
     "sites": [
       {
-        "name": "OkDiario",
-        "url": "https://okdiario.com",
-        "allowedDomains": ["okdiario.com", "www.okdiario.com"],
-        "articleContainerPath": "header.segmento-header",
-        "titlePath": "h2.segmento-title a",
-        "linkPath": "h2.segmento-title a",
-        "textPath": "p.segmento-lead",
+        "name": "Yahoo Apple news",
+        "url": "https://finance.yahoo.com/quote/MSFT/news/",
+
+        "allowedDomains": ["finance.yahoo.com", "www.finance.yahoo.com"],
+        "articleContainerPath": "ul",
+        "titlePath": "h3",
+        "linkPath": "a",
+        "textPath": "p",
         "enabled": true
       }
     ]

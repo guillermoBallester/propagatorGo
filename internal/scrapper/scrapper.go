@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"propagatorGo/internal/config"
+	"strings"
 	"sync"
 	"time"
 
@@ -43,6 +44,7 @@ func NewNewsScraper(cfg *config.ScraperConfig) (*NewsScraper, error) {
 		colly.AllowedDomains(allowedDomains...),
 		colly.UserAgent(cfg.UserAgent),
 		colly.MaxDepth(cfg.MaxDepth),
+		colly.AllowURLRevisit(),
 	)
 
 	err := col.Limit(&colly.LimitRule{
@@ -106,14 +108,20 @@ func (s *NewsScraper) registerHTMLHandlers(collector *colly.Collector) {
 	for _, config := range s.configs {
 		siteConfig := config
 
-		collector.OnHTML(siteConfig.ArticleContainerPath, func(e *colly.HTMLElement) {
-			article := s.extractArticle(e, SiteConfig(siteConfig))
+		switch {
+		case strings.Contains(strings.ToLower(siteConfig.Name), "yahoo"):
+			collector.OnHTML(siteConfig.ArticleContainerPath, func(e *colly.HTMLElement) {
+				if !strings.Contains(e.Attr("class"), "stream-items") {
+					return
+				}
 
-			if article.Title != "" && article.URL != "" {
-				s.saveArticle(article)
-				log.Printf("Scraped article: %s from %s", article.Title, siteConfig.Name)
-			}
-		})
+				articles := s.extractYahooArticles(e, SiteConfig(siteConfig))
+				for _, article := range articles {
+					s.saveArticle(article)
+					log.Printf("Scraped Yahoo article: %s", article.Title)
+				}
+			})
+		}
 	}
 }
 

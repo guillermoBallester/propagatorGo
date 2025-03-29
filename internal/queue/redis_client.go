@@ -3,6 +3,7 @@ package queue
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -52,4 +53,22 @@ func (r *RedisClient) PublishMessage(ctx context.Context, queueName string, mess
 	}
 
 	return nil
+}
+
+// ConsumeMessage retrieves a message from a Redis queue
+func (r *RedisClient) ConsumeMessage(ctx context.Context, queueName string, timeout time.Duration) ([]byte, error) {
+	result, err := r.client.BLPop(ctx, timeout, queueName).Result()
+	if err != nil {
+		if errors.Is(err, redis.Nil) {
+			return nil, nil // No message available
+		}
+		return nil, err
+	}
+
+	// BLPOP returns [queueName, value]
+	if len(result) < 2 {
+		return nil, nil
+	}
+
+	return []byte(result[1]), nil
 }

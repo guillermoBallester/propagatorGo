@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"log"
 	"propagatorGo/internal/config"
+	"propagatorGo/internal/database"
+	"propagatorGo/internal/queue"
 	"propagatorGo/internal/scheduler"
+	scraper "propagatorGo/internal/scrapper"
 	"propagatorGo/internal/worker"
 	"time"
 )
@@ -31,10 +34,10 @@ type Orchestrator struct {
 
 // WorkerDependencies contains all dependencies needed for various worker types
 type WorkerDependencies struct {
-	Scraper     interface{}
-	Publisher   interface{}
-	RedisClient interface{}
-	DBClient    interface{}
+	Scraper     *scraper.NewsScraper
+	Publisher   *scraper.ArticlePublisher
+	RedisClient *queue.RedisClient
+	DBClient    *database.PostgresClient
 }
 
 // NewOrchestrator creates a new orchestrator

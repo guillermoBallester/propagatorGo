@@ -8,7 +8,6 @@ import (
 	"propagatorGo/internal/config"
 	"propagatorGo/internal/orchestrator"
 	"propagatorGo/internal/queue"
-	"propagatorGo/internal/scheduler"
 	scraper "propagatorGo/internal/scrapper"
 	"syscall"
 )
@@ -34,14 +33,16 @@ func main() {
 		}
 	}(handler.Redis)
 
-	s := scheduler.NewScheduler(&cfg.Scheduler)
-	initErr := s.Initialize()
-	if initErr != nil {
-		log.Fatalf("Failed to initialize scheduler: %v", initErr)
-	}
+	/*	s := scheduler.NewScheduler(&cfg.Scheduler)
+		initErr := s.Initialize()
+		if initErr != nil {
+			log.Fatalf("Failed to initialize scheduler: %v", initErr)
+		}
 
-	s.Start()
-	defer s.Stop()
+		s.Start()
+		defer s.Stop()*/
+
+	//Should orchestrator start scheduler, right?
 
 	deps := &orchestrator.WorkerDependencies{
 		Scraper:     handler.Scraper,

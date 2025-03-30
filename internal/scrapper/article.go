@@ -7,8 +7,6 @@ import (
 	"github.com/gocolly/colly"
 )
 
-const href = "href"
-
 // ArticleData represents the extracted data from an article
 type ArticleData struct {
 	Title     string

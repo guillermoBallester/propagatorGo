@@ -1,15 +1,13 @@
 package main
 
 import (
-	"context"
 	"flag"
-	"fmt"
 	"log"
 	"os"
 	"os/signal"
 	"propagatorGo/internal/config"
+	"propagatorGo/internal/orchestrator"
 	"propagatorGo/internal/queue"
-	"propagatorGo/internal/scheduler"
 	scraper "propagatorGo/internal/scrapper"
 	"syscall"
 )
@@ -35,49 +33,61 @@ func main() {
 		}
 	}(handler.Redis)
 
-	s := scheduler.NewScheduler(&cfg.Scheduler)
-	initErr := s.Initialize()
-	if initErr != nil {
-		log.Fatalf("Failed to initialize scheduler: %v", initErr)
+	/*	s := scheduler.NewScheduler(&cfg.Scheduler)
+		initErr := s.Initialize()
+		if initErr != nil {
+			log.Fatalf("Failed to initialize scheduler: %v", initErr)
+		}
+
+		s.Start()
+		defer s.Stop()*/
+
+	//Should orchestrator start scheduler, right?
+
+	deps := &orchestrator.WorkerDependencies{
+		Scraper:     handler.Scraper,
+		Publisher:   handler.Publisher,
+		RedisClient: handler.Redis,
+		//DBClient:    dbClient,
 	}
 
-	s.Start()
-	defer s.Stop()
+	// Create orchestrator
+	orch := orchestrator.NewOrchestrator(&cfg.Scheduler, deps)
 
-	regErr := s.RegisterJobHandler("news-scraper", func(ctx context.Context) error {
-		articles, scrapErr := handler.Scraper.Scrape(ctx)
-		if scrapErr != nil {
-			log.Printf("Scraping error: %v", scrapErr)
-			return scrapErr
-		}
-
-		if len(articles) > 0 {
-			err := handler.Publisher.PublishArticles(ctx, articles)
-			if err != nil {
-				return fmt.Errorf("error while publishing articles: %w", err)
-			}
-		}
-
-		return nil
+	// Register worker pools
+	regErr := orch.RegisterWorkerPool(orchestrator.WorkerConfig{
+		PoolSize:    2,
+		WorkerType:  "scraperPublisher",
+		JobName:     "news-scraper",
+		CronExpr:    "0 */5 * * * *", // Every 5 minutes
+		Description: "Scrapes news articles",
+		Enabled:     true,
 	})
 	if regErr != nil {
-		fmt.Printf("Failed to start news scrapper: %s", regErr)
+		log.Panicf("Error registering pool: %v", regErr)
 	}
 
-	runErr := s.RunJob("news-scraper")
-	if runErr != nil {
-		return
+	// Start the orchestrator
+	if err := orch.Start(); err != nil {
+		log.Fatalf("Failed to start orchestrator: %v", err)
 	}
 
-	// Keep the program running
-	log.Println("Scheduler running. Press Ctrl+C to exit.")
+	// Run initial jobs
+	if err := orch.RunJob("news-scraper"); err != nil {
+		log.Printf("Failed to run news-scraper: %v", err)
+	}
+
+	// Wait for termination signal
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
+
+	// Stop the orchestrator
+	orch.Stop()
 }
 
 func initServices(cfg *config.Config) (*SrvHandler, error) {
-	clientRedis, err := queue.NewRedisClient(cfg.Redis.Address, cfg.Redis.Password, 0)
+	clientRedis, err := queue.NewRedisClient(&cfg.Redis)
 	if err != nil {
 		return nil, err
 	}

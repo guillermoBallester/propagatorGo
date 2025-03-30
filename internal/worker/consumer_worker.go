@@ -35,7 +35,7 @@ func (w *ConsumerWriterWorker) Start(ctx context.Context) error {
 		return fmt.Errorf("worker %s is already running", w.Name())
 	}
 
-	w.StartTime = time.Now()
+	w.Stats.RecordStart()
 	log.Printf("Consumer worker %s started, polling queue %s", w.Name(), w.queueName)
 
 	for w.IsActive() {

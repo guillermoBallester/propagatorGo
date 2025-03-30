@@ -15,9 +15,8 @@
     "parallelLimit": 2,
     "sites": [
       {
-        "name": "Yahoo Apple news",
-        "url": "https://finance.yahoo.com/quote/MSFT/news/",
-
+        "name": "yahoo",
+        "url": "https://finance.yahoo.com/quote/&1/news/",
         "allowedDomains": ["finance.yahoo.com", "www.finance.yahoo.com"],
         "articleContainerPath": "ul",
         "titlePath": "h3",
@@ -43,5 +42,84 @@
   "redis": {
     "address": "localhost:6379",
     "password": ""
+  },
+  "stockList": {
+    "stocks": [
+      {
+        "symbol": "AAPL",
+        "name": "Apple Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "MSFT",
+        "name": "Microsoft Corporation",
+        "enabled": true
+      },
+      {
+        "symbol": "GOOGL",
+        "name": "Alphabet Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "AMZN",
+        "name": "Amazon.com, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "META",
+        "name": "Meta Platforms, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "TSLA",
+        "name": "Tesla, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "NVDA",
+        "name": "NVIDIA Corporation",
+        "enabled": true
+      },
+      {
+        "symbol": "NFLX",
+        "name": "Netflix, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "PYPL",
+        "name": "PayPal Holdings, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "INTC",
+        "name": "Intel Corporation",
+        "enabled": true
+      },
+      {
+        "symbol": "AMD",
+        "name": "Advanced Micro Devices, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "CSCO",
+        "name": "Cisco Systems, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "ORCL",
+        "name": "Oracle Corporation",
+        "enabled": true
+      },
+      {
+        "symbol": "CRM",
+        "name": "Salesforce, Inc.",
+        "enabled": true
+      },
+      {
+        "symbol": "IBM",
+        "name": "International Business Machines Corporation",
+        "enabled": true
+      }
+    ]
   }
 }

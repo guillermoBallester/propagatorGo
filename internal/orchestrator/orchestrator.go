@@ -1,4 +1,3 @@
-// orchestrator.go
 package orchestrator
 
 import (
@@ -10,6 +9,7 @@ import (
 	"propagatorGo/internal/queue"
 	"propagatorGo/internal/scheduler"
 	scraper "propagatorGo/internal/scrapper"
+	"propagatorGo/internal/stock"
 	"propagatorGo/internal/worker"
 	"time"
 )
@@ -21,6 +21,7 @@ type WorkerConfig struct {
 	JobName     string `json:"jobName"`
 	CronExpr    string `json:"cronExpr"`
 	QueueName   string `json:"queueName,omitempty"`
+	Source      string `json:"source,omitempty"`
 	Description string `json:"description"`
 	Enabled     bool   `json:"enabled"`
 }
@@ -34,9 +35,10 @@ type Orchestrator struct {
 
 // WorkerDependencies contains all dependencies needed for various worker types
 type WorkerDependencies struct {
-	Scraper     *scraper.NewsScraper
-	Publisher   *scraper.ArticlePublisher
+	ScraperSvc  *scraper.Service
+	Publisher   *scraper.ArticlePublisher //TODO Publisher SHOULD be part of the scrapper Svc
 	RedisClient *queue.RedisClient
+	StockSvc    *stock.Service
 	DBClient    *database.PostgresClient
 }
 
@@ -52,16 +54,24 @@ func NewOrchestrator(schedulerCfg *config.SchedulerConfig, deps *WorkerDependenc
 // RegisterWorkerPool creates and registers a worker pool
 func (o *Orchestrator) RegisterWorkerPool(cfg WorkerConfig) error {
 	pool := worker.NewPool(cfg.PoolSize)
+
 	// Create and add workers based on type
 	for i := 0; i < cfg.PoolSize; i++ {
 		var w worker.Worker
 
 		switch cfg.WorkerType {
 		case worker.ScraperPublisherType:
+			err := o.workerDeps.StockSvc.EnqueueAllStocks(context.Background(), stock.TaskTypeScrape, "yahoo")
+			if err != nil {
+				return err
+			}
 			scrapWorker := worker.NewBaseWorker(i, fmt.Sprintf("%s%d", worker.ScraperPublisherType, i), cfg.WorkerType)
-			w = worker.NewScraperWorker(scrapWorker, o.workerDeps.Scraper, o.workerDeps.Publisher)
+			w = worker.NewScraperWorker(
+				scrapWorker,
+				o.workerDeps.ScraperSvc,
+				o.workerDeps.StockSvc,
+				"yahoo")
 		case worker.ConsumerWriterType:
-			//w = worker.NewConsumerWorker(i, o.workerDeps.RedisClient, o.workerDeps.DBClient, cfg.QueueName)
 		case "api":
 			// Add implementation for API worker
 		default:

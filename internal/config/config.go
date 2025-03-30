@@ -13,6 +13,19 @@ type Config struct {
 	Scraper   ScraperConfig   `json:"scraper"`
 	Scheduler SchedulerConfig `json:"scheduler"`
 	Redis     RedisConfig     `json:"redis"`
+	StockList StockList       `json:"stockList"`
+}
+
+// StockList represents the master list of stocks to be tracked
+type StockList struct {
+	Stocks []Stock `json:"stocks"`
+}
+
+// Stock defines a stock ticker to be tracked
+type Stock struct {
+	Symbol  string `json:"symbol"`
+	Name    string `json:"name,omitempty"`
+	Enabled bool   `json:"enabled"`
 }
 
 // SiteConfig stores the selector configuration for each website
@@ -117,6 +130,10 @@ func validateConfig(cfg *Config) error {
 
 	if len(cfg.Scheduler.Jobs) == 0 {
 		return fmt.Errorf("at least one scheduler job must be configured")
+	}
+
+	if len(cfg.StockList.Stocks) == 0 {
+		return fmt.Errorf("at least one stock list must be configured")
 	}
 
 	return nil

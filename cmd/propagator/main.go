@@ -9,59 +9,52 @@ import (
 	"propagatorGo/internal/orchestrator"
 	"propagatorGo/internal/queue"
 	scraper "propagatorGo/internal/scrapper"
+	"propagatorGo/internal/stock"
 	"propagatorGo/internal/worker"
 	"syscall"
 )
 
-type SrvHandler struct {
-	Scraper   *scraper.NewsScraper
-	Redis     *queue.RedisClient
-	Publisher *scraper.ArticlePublisher
-}
-
 func main() {
 
-	cfg := loadConfig()
-	handler, err := initServices(cfg)
-	if err != nil {
-		log.Fatalf("Failed to initialize services, %v", err)
+	configPath := flag.String("config", "config.json", "Path to configuration file")
+	cfg, errCfg := config.LoadConfig(*configPath)
+	if errCfg != nil {
+		log.Fatalf("Failed to load config: %v", errCfg)
 	}
 
-	defer func(redisClient *queue.RedisClient) {
-		err := handler.Redis.Close()
-		if err != nil {
-
-		}
-	}(handler.Redis)
+	redisClient, err := queue.NewRedisClient(&cfg.Redis)
+	if err != nil {
+		log.Fatalf("Failed to initialize Redis client: %v", err)
+	}
+	defer redisClient.Close()
 
 	deps := &orchestrator.WorkerDependencies{
-		Scraper:     handler.Scraper,
-		Publisher:   handler.Publisher,
-		RedisClient: handler.Redis,
-		//DBClient:    dbClient,
+		ScraperSvc:  scraper.NewScraperService(cfg, redisClient),
+		RedisClient: redisClient,
+		StockSvc:    stock.NewService(cfg, redisClient),
 	}
 
 	// Create orchestrator
 	orch := orchestrator.NewOrchestrator(&cfg.Scheduler, deps)
 
-	// Register worker pools
 	regErr := orch.RegisterWorkerPool(orchestrator.WorkerConfig{
-		PoolSize:    2,
+		PoolSize:    4,
 		WorkerType:  worker.ScraperPublisherType,
-		JobName:     "news-scraper",
-		CronExpr:    "0 */5 * * * *", // Every 5 minutes
-		Description: "Scrapes news articles",
+		JobName:     "yahoo-scraper",
+		CronExpr:    "0 */30 * * * *",
+		Source:      "yahoo",
+		Description: "Scrapes Yahoo Finance for stock news",
 		Enabled:     true,
 	})
 	if regErr != nil {
-		log.Panicf("Error registering pool: %v", regErr)
+		log.Panicf("Error registering Yahoo scraper pool: %v", regErr)
 	}
 
 	// Start the orchestrator
 	orch.Start()
 
 	// Run initial jobs
-	if err := orch.RunJob("news-scraper"); err != nil {
+	if err := orch.RunJob("yahoo-scraper"); err != nil {
 		log.Printf("Failed to run news-scraper: %v", err)
 	}
 
@@ -71,38 +64,4 @@ func main() {
 	<-c
 
 	orch.Stop()
-}
-
-func initServices(cfg *config.Config) (*SrvHandler, error) {
-	clientRedis, err := queue.NewRedisClient(&cfg.Redis)
-	if err != nil {
-		return nil, err
-	}
-
-	publisher := scraper.NewArticlePublisher(clientRedis)
-
-	svcScraper, err := scraper.NewNewsScraper(&cfg.Scraper)
-	if err != nil {
-		return nil, err
-	}
-
-	return &SrvHandler{
-		Scraper:   svcScraper,
-		Redis:     clientRedis,
-		Publisher: publisher,
-	}, nil
-}
-
-func loadConfig() *config.Config {
-	configPath := flag.String("config", "config.json", "Path to configuration file")
-	flag.Parse()
-
-	cfg, err := config.LoadConfig(*configPath)
-	if err != nil {
-		log.Fatalf("Failed to load configuration from %s: %v", *configPath, err)
-	}
-
-	log.Printf("Configuration loaded successfully from %s", *configPath)
-
-	return cfg
 }

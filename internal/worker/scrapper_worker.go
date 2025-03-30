@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"log"
 	scraper "propagatorGo/internal/scrapper"
-	"sync/atomic"
 	"time"
 )
 
@@ -28,11 +27,13 @@ func NewScraperWorker(bw BaseWorker, scraper *scraper.NewsScraper, publisher *sc
 
 // Start begins the scraping process
 func (w *ScraperPublisherWorker) Start(ctx context.Context) error {
-	if !atomic.CompareAndSwapInt32(&w.Active, 0, 1) {
+	if !w.SetActive(true) {
 		return fmt.Errorf("worker %s is already running", w.Name())
 	}
 
-	for atomic.LoadInt32(&w.Active) == 1 {
+	w.StartTime = time.Now()
+
+	for w.IsActive() {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -59,15 +60,4 @@ func (w *ScraperPublisherWorker) Start(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-// Stop gracefully stops the worker
-func (w *ScraperPublisherWorker) Stop() error {
-	atomic.StoreInt32(&w.Active, 0)
-	return nil
-}
-
-// Name returns the worker name
-func (w *ScraperPublisherWorker) Name() string {
-	return w.BaseWorker.Name
 }

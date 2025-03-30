@@ -9,6 +9,7 @@ import (
 	"propagatorGo/internal/orchestrator"
 	"propagatorGo/internal/queue"
 	scraper "propagatorGo/internal/scrapper"
+	"propagatorGo/internal/worker"
 	"syscall"
 )
 
@@ -33,17 +34,6 @@ func main() {
 		}
 	}(handler.Redis)
 
-	/*	s := scheduler.NewScheduler(&cfg.Scheduler)
-		initErr := s.Initialize()
-		if initErr != nil {
-			log.Fatalf("Failed to initialize scheduler: %v", initErr)
-		}
-
-		s.Start()
-		defer s.Stop()*/
-
-	//Should orchestrator start scheduler, right?
-
 	deps := &orchestrator.WorkerDependencies{
 		Scraper:     handler.Scraper,
 		Publisher:   handler.Publisher,
@@ -57,7 +47,7 @@ func main() {
 	// Register worker pools
 	regErr := orch.RegisterWorkerPool(orchestrator.WorkerConfig{
 		PoolSize:    2,
-		WorkerType:  "scraperPublisher",
+		WorkerType:  worker.ScraperPublisherType,
 		JobName:     "news-scraper",
 		CronExpr:    "0 */5 * * * *", // Every 5 minutes
 		Description: "Scrapes news articles",
@@ -68,9 +58,7 @@ func main() {
 	}
 
 	// Start the orchestrator
-	if err := orch.Start(); err != nil {
-		log.Fatalf("Failed to start orchestrator: %v", err)
-	}
+	orch.Start()
 
 	// Run initial jobs
 	if err := orch.RunJob("news-scraper"); err != nil {
@@ -82,7 +70,6 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 
-	// Stop the orchestrator
 	orch.Stop()
 }
 

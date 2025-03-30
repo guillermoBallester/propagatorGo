@@ -52,16 +52,16 @@ func NewOrchestrator(schedulerCfg *config.SchedulerConfig, deps *WorkerDependenc
 // RegisterWorkerPool creates and registers a worker pool
 func (o *Orchestrator) RegisterWorkerPool(cfg WorkerConfig) error {
 	pool := worker.NewPool(cfg.PoolSize)
-
 	// Create and add workers based on type
 	for i := 0; i < cfg.PoolSize; i++ {
 		var w worker.Worker
 
 		switch cfg.WorkerType {
-		case "scraperPublisher":
-			w = worker.NewScraperWorker(i, o.workerDeps.Scraper, o.workerDeps.Publisher)
-		case "consumerWriter":
-			w = worker.NewConsumerWorker(i, o.workerDeps.RedisClient, o.workerDeps.DBClient, cfg.QueueName)
+		case worker.ScraperPublisherType:
+			scrapWorker := worker.NewBaseWorker(i, fmt.Sprintf("%s%d", worker.ScraperPublisherType, i), cfg.WorkerType)
+			w = worker.NewScraperWorker(scrapWorker, o.workerDeps.Scraper, o.workerDeps.Publisher)
+		case worker.ConsumerWriterType:
+			//w = worker.NewConsumerWorker(i, o.workerDeps.RedisClient, o.workerDeps.DBClient, cfg.QueueName)
 		case "api":
 			// Add implementation for API worker
 		default:
@@ -73,10 +73,7 @@ func (o *Orchestrator) RegisterWorkerPool(cfg WorkerConfig) error {
 		}
 	}
 
-	// Register the pool
 	o.pools[cfg.JobName] = pool
-
-	// Register job in the scheduler
 	if err := o.registerJobHandler(cfg.JobName, cfg.CronExpr, pool); err != nil {
 		return fmt.Errorf("error registering job: %w", err)
 	}
@@ -116,16 +113,19 @@ func (o *Orchestrator) registerJobHandler(name string, cronExpr string, pool *wo
 }
 
 // Start starts the orchestrator
-func (o *Orchestrator) Start() error {
-	return o.scheduler.Start()
+func (o *Orchestrator) Start() {
+	o.scheduler.Start()
+	log.Println("Orchestrator started")
 }
 
 // Stop stops the orchestrator
 func (o *Orchestrator) Stop() {
 	o.scheduler.Stop()
+	log.Println("Orchestrator stopped")
 }
 
 // RunJob immediately runs a job
 func (o *Orchestrator) RunJob(name string) error {
+	log.Printf("Starting job: %s", name)
 	return o.scheduler.RunJob(name)
 }

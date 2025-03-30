@@ -9,7 +9,6 @@ import (
 	"propagatorGo/internal/database"
 	"propagatorGo/internal/queue"
 	scraper "propagatorGo/internal/scrapper"
-	"sync/atomic"
 	"time"
 )
 
@@ -32,12 +31,14 @@ func NewConsumerWorker(id int, redis *queue.RedisClient, db *database.PostgresCl
 
 // Start begins consuming messages from Redis
 func (w *ConsumerWriterWorker) Start(ctx context.Context) error {
-	if !atomic.CompareAndSwapInt32(&w.Active, 0, 1) {
-		return fmt.Errorf("worker %s is already running", w.Name)
+	if !w.SetActive(true) {
+		return fmt.Errorf("worker %s is already running", w.Name())
 	}
 
-	log.Printf("Consumer worker %s started, polling queue %s", w.Name, w.queueName)
-	for atomic.LoadInt32(&w.Active) == 1 {
+	w.StartTime = time.Now()
+	log.Printf("Consumer worker %s started, polling queue %s", w.Name(), w.queueName)
+
+	for w.IsActive() {
 		select {
 		case <-ctx.Done():
 			return ctx.Err()
@@ -76,15 +77,4 @@ func (w *ConsumerWriterWorker) processMessage(ctx context.Context, data []byte) 
 
 	log.Printf("Processed article: %s", article.Title)
 	return nil
-}
-
-// Stop gracefully stops the worker
-func (w *ConsumerWriterWorker) Stop() error {
-	atomic.StoreInt32(&w.Active, 0)
-	return nil
-}
-
-// Name returns the worker name
-func (w *ConsumerWriterWorker) Name() string {
-	return w.BaseWorker.Name
 }

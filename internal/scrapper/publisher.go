@@ -27,7 +27,6 @@ func (p *ArticlePublisher) PublishArticle(ctx context.Context, article ArticleDa
 	if err != nil {
 		return fmt.Errorf("failed to publish article: %w", err)
 	}
-	log.Printf("Published article to queue: %s", article.Title)
 	return nil
 }
 

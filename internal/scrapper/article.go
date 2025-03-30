@@ -24,7 +24,7 @@ func (s *NewsScraper) saveArticle(article ArticleData) {
 	s.articles = append(s.articles, article)
 }
 
-func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement, config SiteConfig) []ArticleData {
+func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement) []ArticleData {
 	var articles []ArticleData
 
 	e.ForEach("li", func(_ int, li *colly.HTMLElement) {
@@ -35,7 +35,7 @@ func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement, config SiteConf
 		}
 
 		article := ArticleData{
-			SiteName:  config.Name,
+			SiteName:  "yahoo",
 			Title:     li.ChildText("h3"),
 			URL:       li.ChildAttr("a", "href"),
 			Text:      li.ChildText("p"),

@@ -27,18 +27,15 @@ type SiteConfig struct {
 
 // NewsScraper is the main manager for scraping news
 type NewsScraper struct {
-	configs       []config.SiteConfig
+	config        *config.SiteConfig
 	mainCollector *colly.Collector
 	articles      []ArticleData
 	articleMutex  sync.Mutex
 }
 
 // NewNewsScraper creates a new instance of the scraper
-func NewNewsScraper(cfg *config.ScraperConfig) (*NewsScraper, error) {
-	var allowedDomains []string
-	for _, SiteConfig := range cfg.Sites {
-		allowedDomains = append(allowedDomains, SiteConfig.AllowedDomains...)
-	}
+func NewNewsScraper(cfg *config.ScraperConfig, siteConfig *config.SiteConfig) (*NewsScraper, error) {
+	allowedDomains := siteConfig.AllowedDomains
 
 	col := colly.NewCollector(
 		colly.AllowedDomains(allowedDomains...),
@@ -59,24 +56,23 @@ func NewNewsScraper(cfg *config.ScraperConfig) (*NewsScraper, error) {
 		log.Printf("Error scraping %s: %s", r.Request.URL, err)
 	})
 
-	scraper := &NewsScraper{
-		configs:       cfg.Sites,
+	return &NewsScraper{
+		config:        siteConfig,
 		articles:      make([]ArticleData, 0),
 		mainCollector: col,
-	}
-
-	return scraper, nil
+	}, nil
 }
 
 // Scrape extracts information from an article preview
-func (s *NewsScraper) Scrape(ctx context.Context) ([]ArticleData, error) {
+func (s *NewsScraper) Scrape(ctx context.Context, source string, symbol string) ([]ArticleData, error) {
 	s.resetArticles()
 
 	ctxCollector := s.createContextCollector(ctx)
+	url := s.buildURL(symbol)
+	log.Printf("Scraping %s for symbol %s from URL: %s", s.config.Name, symbol, url)
+	s.registerHTMLHandlers(ctxCollector, source)
 
-	s.registerHTMLHandlers(ctxCollector)
-
-	done, errChan := s.startScraping(ctx, ctxCollector)
+	done, errChan := s.startScraping(ctx, ctxCollector, url)
 
 	err := s.waitForCompletion(ctx, done, errChan, ctxCollector)
 	if err != nil {
@@ -84,6 +80,16 @@ func (s *NewsScraper) Scrape(ctx context.Context) ([]ArticleData, error) {
 	}
 
 	return s.GetArticles(), nil
+}
+
+// buildURL replaces template parameters in the URL
+func (s *NewsScraper) buildURL(symbol string) string {
+	url := s.config.URL
+	if strings.Contains(url, "&1") {
+		url = strings.Replace(url, "&1", symbol, -1)
+	}
+
+	return url
 }
 
 // createContextCollector creates a collector with context cancellation
@@ -104,56 +110,49 @@ func (s *NewsScraper) createContextCollector(ctx context.Context) *colly.Collect
 }
 
 // registerHTMLHandlers sets up HTML handlers for article extraction
-func (s *NewsScraper) registerHTMLHandlers(collector *colly.Collector) {
-	for _, config := range s.configs {
-		siteConfig := config
+func (s *NewsScraper) registerHTMLHandlers(collector *colly.Collector, source string) {
+	switch {
+	//Yahoo
+	case strings.Contains(strings.ToLower(s.config.Name), "yahoo"):
+		collector.OnHTML(s.config.ArticleContainerPath, func(e *colly.HTMLElement) {
+			if !strings.Contains(e.Attr("class"), "stream-items") {
+				return
+			}
 
-		switch {
-		case strings.Contains(strings.ToLower(siteConfig.Name), "yahoo"):
-			collector.OnHTML(siteConfig.ArticleContainerPath, func(e *colly.HTMLElement) {
-				if !strings.Contains(e.Attr("class"), "stream-items") {
-					return
-				}
-
-				articles := s.extractYahooArticles(e, SiteConfig(siteConfig))
-				for _, article := range articles {
-					s.saveArticle(article)
-					log.Printf("Scraped Yahoo article: %s", article.Title)
-				}
-			})
-		}
+			articles := s.extractYahooArticles(e)
+			for _, article := range articles {
+				s.saveArticle(article)
+			}
+		})
 	}
 }
 
-// startScraping begins the scraping process for all sites
-func (s *NewsScraper) startScraping(ctx context.Context, collector *colly.Collector) (chan bool, chan error) {
+// startScraping begins the scraping process for a URL
+func (s *NewsScraper) startScraping(ctx context.Context, collector *colly.Collector, url string) (chan bool, chan error) {
 	done := make(chan bool)
-	errChan := make(chan error, len(s.configs))
+	errChan := make(chan error, 1)
 
 	var wg sync.WaitGroup
-	// Start visiting URLs for each config
-	for _, config := range s.configs {
-		wg.Add(1)
+	wg.Add(1)
 
-		go func(cfg SiteConfig) {
-			defer wg.Done()
+	go func() {
+		defer wg.Done()
 
-			select {
-			case <-ctx.Done():
-				errChan <- ctx.Err()
-				return
-			default:
-				// Continue with scraping
-			}
+		select {
+		case <-ctx.Done():
+			errChan <- ctx.Err()
+			return
+		default:
+			// Continue with scraping
+		}
 
-			log.Printf("Starting to scrape: %s from %s", cfg.Name, cfg.URL)
-			err := collector.Visit(cfg.URL)
-			if err != nil {
-				log.Printf("Error visiting %s: %v", cfg.URL, err)
-				errChan <- fmt.Errorf("error scraping %s: %w", cfg.Name, err)
-			}
-		}(SiteConfig(config))
-	}
+		log.Printf("Starting to scrape: %s", url)
+		err := collector.Visit(url)
+		if err != nil {
+			log.Printf("Error visiting %s: %v", url, err)
+			errChan <- fmt.Errorf("error scraping %s: %w", s.config.Name, err)
+		}
+	}()
 
 	// goroutine that manages completion signal
 	go func() {

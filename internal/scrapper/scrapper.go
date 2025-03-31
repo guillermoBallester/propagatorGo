@@ -5,12 +5,15 @@ import (
 	"fmt"
 	"log"
 	"propagatorGo/internal/config"
+	"propagatorGo/internal/constants"
 	"strings"
 	"sync"
 	"time"
 
 	"github.com/gocolly/colly"
 )
+
+const Yahoo = "yahoo"
 
 // SiteConfig stores the selector configuration for each website
 type SiteConfig struct {
@@ -64,13 +67,13 @@ func NewNewsScraper(cfg *config.ScraperConfig, siteConfig *config.SiteConfig) (*
 }
 
 // Scrape extracts information from an article preview
-func (s *NewsScraper) Scrape(ctx context.Context, source string, symbol string) ([]ArticleData, error) {
+func (s *NewsScraper) Scrape(ctx context.Context, symbol string) ([]ArticleData, error) {
 	s.resetArticles()
 
 	ctxCollector := s.createContextCollector(ctx)
 	url := s.buildURL(symbol)
 	log.Printf("Scraping %s for symbol %s from URL: %s", s.config.Name, symbol, url)
-	s.registerHTMLHandlers(ctxCollector, source)
+	s.registerHTMLHandlers(ctxCollector)
 
 	done, errChan := s.startScraping(ctx, ctxCollector, url)
 
@@ -110,10 +113,10 @@ func (s *NewsScraper) createContextCollector(ctx context.Context) *colly.Collect
 }
 
 // registerHTMLHandlers sets up HTML handlers for article extraction
-func (s *NewsScraper) registerHTMLHandlers(collector *colly.Collector, source string) {
+func (s *NewsScraper) registerHTMLHandlers(collector *colly.Collector) {
 	switch {
 	//Yahoo
-	case strings.Contains(strings.ToLower(s.config.Name), "yahoo"):
+	case strings.Contains(strings.ToLower(s.config.Name), constants.SourceYahoo):
 		collector.OnHTML(s.config.ArticleContainerPath, func(e *colly.HTMLElement) {
 			if !strings.Contains(e.Attr("class"), "stream-items") {
 				return

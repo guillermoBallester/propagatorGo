@@ -5,41 +5,26 @@ import (
 	"fmt"
 	"log"
 	"propagatorGo/internal/config"
-	"propagatorGo/internal/database"
-	"propagatorGo/internal/queue"
 	"propagatorGo/internal/scheduler"
 	scraper "propagatorGo/internal/scrapper"
-	"propagatorGo/internal/stock"
+	"propagatorGo/internal/task"
 	"propagatorGo/internal/worker"
 	"time"
 )
 
-// WorkerConfig defines configuration for a worker pool
-type WorkerConfig struct {
-	PoolSize    int    `json:"poolSize"`
-	WorkerType  string `json:"workerType"`
-	JobName     string `json:"jobName"`
-	CronExpr    string `json:"cronExpr"`
-	QueueName   string `json:"queueName,omitempty"`
-	Source      string `json:"source,omitempty"`
-	Description string `json:"description"`
-	Enabled     bool   `json:"enabled"`
-}
-
 // Orchestrator manages worker pools and schedules their execution
 type Orchestrator struct {
-	scheduler  *scheduler.Scheduler
-	pools      map[string]*worker.Pool
+	scheduler *scheduler.Scheduler
+	pools     map[string]*worker.Pool
+
 	workerDeps *WorkerDependencies
 }
 
 // WorkerDependencies contains all dependencies needed for various worker types
 type WorkerDependencies struct {
-	ScraperSvc  *scraper.Service
-	Publisher   *scraper.ArticlePublisher //TODO Publisher SHOULD be part of the scrapper Svc
-	RedisClient *queue.RedisClient
-	StockSvc    *stock.Service
-	DBClient    *database.PostgresClient
+	ScraperSvc    *scraper.Service
+	TaskService   *task.Service
+	WorkerFactory *worker.Factory
 }
 
 // NewOrchestrator creates a new orchestrator
@@ -52,34 +37,22 @@ func NewOrchestrator(schedulerCfg *config.SchedulerConfig, deps *WorkerDependenc
 }
 
 // RegisterWorkerPool creates and registers a worker pool
-func (o *Orchestrator) RegisterWorkerPool(cfg WorkerConfig) error {
+func (o *Orchestrator) RegisterWorkerPool(cfg config.WorkerConfig) error {
 	pool := worker.NewPool(cfg.PoolSize)
+
+	err := o.workerDeps.TaskService.EnqueueAll(context.Background(), cfg.TaskType, cfg.Source)
+	if err != nil {
+		return err
+	}
 
 	// Create and add workers based on type
 	for i := 0; i < cfg.PoolSize; i++ {
-		var w worker.Worker
-
-		switch cfg.WorkerType {
-		case worker.ScraperPublisherType:
-			err := o.workerDeps.StockSvc.EnqueueAllStocks(context.Background(), stock.TaskTypeScrape, "yahoo")
-			if err != nil {
-				return err
-			}
-			scrapWorker := worker.NewBaseWorker(i, fmt.Sprintf("%s%d", worker.ScraperPublisherType, i), cfg.WorkerType)
-			w = worker.NewScraperWorker(
-				scrapWorker,
-				o.workerDeps.ScraperSvc,
-				o.workerDeps.StockSvc,
-				"yahoo")
-		case worker.ConsumerWriterType:
-		case "api":
-			// Add implementation for API worker
-		default:
-			return fmt.Errorf("unknown worker type: %s", cfg.WorkerType)
+		w, workerErr := o.workerDeps.WorkerFactory.CreateWorker(i, cfg.WorkerType)
+		if workerErr != nil {
+			return fmt.Errorf("error creating worker: %w", workerErr)
 		}
-
-		if err := pool.AddWorker(w); err != nil {
-			return fmt.Errorf("error adding worker: %w", err)
+		if poolErr := pool.AddWorker(w); poolErr != nil {
+			return fmt.Errorf("error adding worker: %w", poolErr)
 		}
 	}
 

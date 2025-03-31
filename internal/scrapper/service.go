@@ -40,7 +40,7 @@ func (s *Service) ScrapeAndPublish(ctx context.Context, source string, symbol st
 	if err != nil {
 		return nil, fmt.Errorf("error getting scraper: %w", err)
 	}
-	articles, err := scraper.Scrape(ctx, source, symbol)
+	articles, err := scraper.Scrape(ctx, symbol)
 	if err != nil {
 		return nil, fmt.Errorf("error scraping: %w", err)
 	}

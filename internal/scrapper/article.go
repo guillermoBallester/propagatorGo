@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"propagatorGo/internal/constants"
 	"strings"
 	"time"
 
@@ -35,7 +36,7 @@ func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement) []ArticleData {
 		}
 
 		article := ArticleData{
-			SiteName:  "yahoo",
+			SiteName:  constants.SourceYahoo,
 			Title:     li.ChildText("h3"),
 			URL:       li.ChildAttr("a", "href"),
 			Text:      li.ChildText("p"),

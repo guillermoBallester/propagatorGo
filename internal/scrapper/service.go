@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"propagatorGo/internal/config"
+	"propagatorGo/internal/constants"
 	"propagatorGo/internal/queue"
 	"sync"
 )
@@ -14,23 +15,15 @@ type Service struct {
 	redisClient   *queue.RedisClient
 	scrapersMutex sync.RWMutex
 	scrapers      map[string]*NewsScraper
-	publisher     *ArticlePublisher
 }
 
 // NewScraperService creates a new scraper service
 func NewScraperService(cfg *config.Config, redis *queue.RedisClient) *Service {
-	publisher := NewArticlePublisher(redis)
 	return &Service{
 		config:      cfg,
 		redisClient: redis,
 		scrapers:    make(map[string]*NewsScraper),
-		publisher:   publisher,
 	}
-}
-
-// GetPublisher returns the article publisher
-func (s *Service) GetPublisher() *ArticlePublisher {
-	return s.publisher
 }
 
 // ScrapeAndPublish performs both scraping and publishing in one operation
@@ -47,8 +40,11 @@ func (s *Service) ScrapeAndPublish(ctx context.Context, source string, symbol st
 
 	// If we have articles, publish them
 	if len(articles) > 0 {
-		if err := s.publisher.PublishArticles(ctx, articles); err != nil {
-			return articles, fmt.Errorf("error publishing articles: %w", err)
+		for _, article := range articles {
+			queueErr := s.redisClient.Enqueue(ctx, fmt.Sprintf(constants.TaskTypeConsume), article)
+			if queueErr != nil {
+				return nil, queueErr
+			}
 		}
 	}
 

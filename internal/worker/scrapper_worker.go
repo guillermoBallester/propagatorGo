@@ -11,16 +11,16 @@ import (
 	"time"
 )
 
-// ScraperPublisherWorker scrapes websites and publishes to Redis
-type ScraperPublisherWorker struct {
+// ScraperWorker scrapes websites and publishes to Redis
+type ScraperWorker struct {
 	BaseWorker
 	scraperService *scraper.Service
 	taskService    *task.Service
 }
 
 // NewScraperWorker creates a new scraper worker
-func NewScraperWorker(bw BaseWorker, scraperSvc *scraper.Service, taskSvc *task.Service) *ScraperPublisherWorker {
-	return &ScraperPublisherWorker{
+func NewScraperWorker(bw BaseWorker, scraperSvc *scraper.Service, taskSvc *task.Service) *ScraperWorker {
+	return &ScraperWorker{
 		BaseWorker:     bw,
 		scraperService: scraperSvc,
 		taskService:    taskSvc,
@@ -28,7 +28,7 @@ func NewScraperWorker(bw BaseWorker, scraperSvc *scraper.Service, taskSvc *task.
 }
 
 // Start begins the scraping process
-func (w *ScraperPublisherWorker) Start(ctx context.Context) error {
+func (w *ScraperWorker) Start(ctx context.Context) error {
 	if !w.SetActive(true) {
 		return fmt.Errorf("worker %s is already running", w.Name())
 	}
@@ -40,8 +40,7 @@ func (w *ScraperPublisherWorker) Start(ctx context.Context) error {
 		default:
 			w.Stats.RecordStart()
 
-			fmt.Println("Trying to get next task")
-			nextTask, err := w.taskService.GetNext(ctx, constants.WorkerTypeScraper, 5)
+			nextTask, err := w.taskService.GetNext(ctx, constants.TaskTypeScrape, 5)
 			if err != nil {
 				log.Printf("Error getting task: %v", err)
 				w.Stats.RecordItemFailed()

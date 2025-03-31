@@ -3,6 +3,7 @@ package worker
 import (
 	"fmt"
 	"propagatorGo/internal/constants"
+	"propagatorGo/internal/repository"
 	scraper "propagatorGo/internal/scrapper"
 	"propagatorGo/internal/task"
 )
@@ -11,13 +12,15 @@ import (
 type Factory struct {
 	scraperService *scraper.Service
 	taskService    *task.Service
+	repository     *repository.ArticleRepository
 }
 
 // NewWorkerFactory creates a new worker factory
-func NewWorkerFactory(scraperSvc *scraper.Service, taskSvc *task.Service) *Factory {
+func NewWorkerFactory(scraperSvc *scraper.Service, taskSvc *task.Service, repo *repository.ArticleRepository) *Factory {
 	return &Factory{
 		scraperService: scraperSvc,
 		taskService:    taskSvc,
+		repository:     repo,
 	}
 }
 
@@ -30,7 +33,7 @@ func (f *Factory) CreateWorker(id int, workerType string) (Worker, error) {
 	case constants.WorkerTypeScraper:
 		return NewScraperWorker(baseWorker, f.scraperService, f.taskService), nil
 	case constants.WorkerTypeConsumer:
-		return nil, nil // TODO
+		return NewConsumerWorker(baseWorker, f.taskService, f.repository), nil
 	default:
 		return nil, fmt.Errorf("unknown worker type: %s", workerType)
 	}

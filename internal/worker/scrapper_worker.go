@@ -48,23 +48,35 @@ func (w *ScraperWorker) Start(ctx context.Context) error {
 				continue
 			}
 
-			fmt.Printf("Got next task %s", nextTask)
-
 			// If no task returned within timeout, try again
 			if nextTask == nil {
 				continue
 			}
 
+			symbol, err := nextTask.GetParamString("symbol")
+			if err != nil {
+				log.Printf("Error getting symbol from task: %v", err)
+				w.Stats.RecordItemFailed()
+				continue
+			}
+
+			source, err := nextTask.GetParamString("source")
+			if err != nil {
+				log.Printf("Error getting source from task: %v", err)
+				w.Stats.RecordItemFailed()
+				continue
+			}
+
 			log.Printf("Worker %s processing symbol: %s from source %s",
-				w.Name(), nextTask.Params.Symbol, nextTask.Params.Source)
+				w.Name(), symbol, source)
 
 			articles, err := w.scraperService.ScrapeAndPublish(
 				ctx,
-				nextTask.Params.Source,
-				nextTask.Params.Symbol,
+				source,
+				symbol,
 			)
 			if err != nil {
-				log.Printf("Error processing symbol %s: %v", nextTask.Params.Symbol, err)
+				log.Printf("Error processing symbol %s: %v", symbol, err)
 				w.Stats.RecordItemFailed()
 				continue
 			}
@@ -73,7 +85,7 @@ func (w *ScraperWorker) Start(ctx context.Context) error {
 			stats := w.Stats.GetSnapshot()
 			log.Printf("[%s] Task completed for %s. Articles: %d, Total processed: %d, Successful: %d, Failed: %d",
 				w.Name(),
-				nextTask.Params.Symbol,
+				symbol,
 				len(articles),
 				stats.ItemsProcessed,
 				stats.ItemsSuccessful,

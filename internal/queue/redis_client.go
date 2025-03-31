@@ -17,7 +17,7 @@ type RedisClient struct {
 }
 
 // NewRedisClient creates a new Redis client
-func NewRedisClient(cfg *config.RedisConfig) (*RedisClient, error) {
+func NewRedisClient(cfg config.RedisConfig) (*RedisClient, error) {
 	client := redis.NewClient(&redis.Options{
 		Addr:     cfg.Address,
 		Password: cfg.Password,

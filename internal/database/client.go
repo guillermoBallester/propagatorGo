@@ -3,20 +3,11 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"propagatorGo/internal/config"
 	"propagatorGo/internal/database/sqlc"
 
 	_ "github.com/lib/pq"
 )
-
-// Config holds database connection configuration
-type Config struct {
-	Host     string
-	Port     int
-	Username string
-	Password string
-	Database string
-	SSLMode  string
-}
 
 // PostgresClient handles database operations
 type PostgresClient struct {
@@ -25,7 +16,7 @@ type PostgresClient struct {
 }
 
 // New creates a new database client
-func New(cfg Config) (*PostgresClient, error) {
+func New(cfg config.DatabaseConfig) (*PostgresClient, error) {
 	connStr := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
 		cfg.Host, cfg.Port, cfg.Username, cfg.Password, cfg.Database, cfg.SSLMode,
@@ -52,4 +43,8 @@ func New(cfg Config) (*PostgresClient, error) {
 // Close closes the database connection
 func (c *PostgresClient) Close() error {
 	return c.db.Close()
+}
+
+func (c *PostgresClient) GetDB() *sql.DB {
+	return c.db
 }

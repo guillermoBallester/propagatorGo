@@ -44,7 +44,6 @@ services:
     networks:
       - propagatorGo-network
 
-
 volumes:
   redis-data:
   postgres-data:

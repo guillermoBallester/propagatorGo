@@ -20,10 +20,11 @@ type ConsumerWorker struct {
 }
 
 // NewConsumerWorker creates a new consumer worker
-func NewConsumerWorker(bw BaseWorker, taskSvc *task.Service) *ConsumerWorker {
+func NewConsumerWorker(bw BaseWorker, taskSvc *task.Service, repo *repository.ArticleRepository) *ConsumerWorker {
 	return &ConsumerWorker{
 		BaseWorker:  bw,
 		taskService: taskSvc,
+		repository:  repo,
 	}
 }
 
@@ -53,8 +54,22 @@ func (w *ConsumerWorker) Start(ctx context.Context) error {
 				continue
 			}
 
+			symbol, err := nextTask.GetParamString("symbol")
+			if err != nil {
+				log.Printf("Error getting symbol from task: %v", err)
+				w.Stats.RecordItemFailed()
+				continue
+			}
+
+			source, err := nextTask.GetParamString("source")
+			if err != nil {
+				log.Printf("Error getting source from task: %v", err)
+				w.Stats.RecordItemFailed()
+				continue
+			}
+
 			log.Printf("Worker %s processing article from source %s for symbol %s",
-				w.Name(), nextTask.Params.Source, nextTask.Params.Symbol)
+				w.Name(), source, symbol)
 
 			// Extract article from task
 			article, err := nextTask.GetArticle()
@@ -71,7 +86,7 @@ func (w *ConsumerWorker) Start(ctx context.Context) error {
 				Text:      article.Text,
 				SiteName:  article.SiteName,
 				ScrapedAt: article.ScrapedAt,
-				Symbol:    nextTask.Params.Symbol,
+				Symbol:    symbol,
 			}
 
 			err = w.repository.SaveArticle(ctx, dbArticle)
@@ -85,12 +100,12 @@ func (w *ConsumerWorker) Start(ctx context.Context) error {
 			stats := w.Stats.GetSnapshot()
 			log.Printf("[%s] Task completed for %s. Articles: %d, Total processed: %d, Successful: %d, Failed: %d",
 				w.Name(),
-				nextTask.Params.Symbol,
+				symbol,
+				1,
 				stats.ItemsProcessed,
 				stats.ItemsSuccessful,
 				stats.ItemsFailed)
 		}
-
 	}
 	return nil
 }

@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"propagatorGo/internal/config"
-	"propagatorGo/internal/constants"
 	"propagatorGo/internal/queue"
+	"propagatorGo/internal/task"
 	"sync"
 )
 
@@ -13,15 +13,17 @@ import (
 type Service struct {
 	config        *config.Config
 	redisClient   *queue.RedisClient
+	taskService   *task.Service
 	scrapersMutex sync.RWMutex
 	scrapers      map[string]*NewsScraper
 }
 
 // NewScraperService creates a new scraper service
-func NewScraperService(cfg *config.Config, redis *queue.RedisClient) *Service {
+func NewScraperService(cfg *config.Config, redis *queue.RedisClient, taskSvc *task.Service) *Service {
 	return &Service{
 		config:      cfg,
 		redisClient: redis,
+		taskService: taskSvc,
 		scrapers:    make(map[string]*NewsScraper),
 	}
 }
@@ -38,10 +40,10 @@ func (s *Service) ScrapeAndPublish(ctx context.Context, source string, symbol st
 		return nil, fmt.Errorf("error scraping: %w", err)
 	}
 
-	// If we have articles, publish them
-	if len(articles) > 0 {
+	if len(articles) > 0 && s.taskService != nil {
 		for _, article := range articles {
-			queueErr := s.redisClient.Enqueue(ctx, fmt.Sprintf(constants.TaskTypeConsume), article)
+			consumeTask := s.taskService.CreateConsumeTask(symbol, source, article)
+			queueErr := s.taskService.EnqueueTask(ctx, consumeTask)
 			if queueErr != nil {
 				return nil, queueErr
 			}

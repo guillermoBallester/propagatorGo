@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"propagatorGo/internal/config"
+	"propagatorGo/internal/constants"
 )
 
 // QueueService defines the minimum interface needed for task queue operations
@@ -35,7 +36,13 @@ func QueueName(taskType string) string {
 	return fmt.Sprintf("task:%s", taskType)
 }
 
-// EnqueueStocks adds all enabled items for a specific task type
+// EnqueueTask adds a task to the appropriate queue
+func (s *Service) EnqueueTask(ctx context.Context, task *Task) error {
+	queueName := QueueName(task.Type)
+	return s.queueSvc.Enqueue(ctx, queueName, task)
+}
+
+// EnqueueStocks adds all enabled stock symbols as tasks for a specific task type
 func (s *Service) EnqueueStocks(ctx context.Context, taskType string, source string) error {
 	queueName := QueueName(taskType)
 
@@ -50,14 +57,17 @@ func (s *Service) EnqueueStocks(ctx context.Context, taskType string, source str
 		return nil
 	}
 
-	// Get enabled stocks from config (this still refers to stocks but the logic is generic)
+	// Get enabled stocks from config
 	var tasksAdded int
 	for _, stock := range s.config.StockList.Stocks {
 		if !stock.Enabled {
 			continue
 		}
-		var task *Task
-		task = NewTask(stock.Symbol, taskType, source)
+
+		task := NewTask(taskType)
+		task.SetParam("symbol", stock.Symbol)
+		task.SetParam("source", source)
+
 		if err := s.queueSvc.Enqueue(ctx, queueName, task); err != nil {
 			log.Printf("Error enqueueing %s task for %s: %v", taskType, stock.Symbol, err)
 			continue
@@ -88,4 +98,21 @@ func (s *Service) GetNext(ctx context.Context, taskType string, timeout int) (*T
 	}
 
 	return &task, nil
+}
+
+// CreateScrapeTask creates a new scrape task for a given symbol and source
+func (s *Service) CreateScrapeTask(symbol, source string) *Task {
+	task := NewTask(constants.TaskTypeScrape)
+	task.SetParam("symbol", symbol)
+	task.SetParam("source", source)
+	return task
+}
+
+// CreateConsumeTask creates a new consume task with article data
+func (s *Service) CreateConsumeTask(symbol, source string, article interface{}) *Task {
+	task := NewTask(constants.TaskTypeConsume)
+	task.SetParam("symbol", symbol)
+	task.SetParam("source", source)
+	task.SetParam("article", article)
+	return task
 }

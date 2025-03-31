@@ -35,8 +35,8 @@ func QueueName(taskType string) string {
 	return fmt.Sprintf("task:%s", taskType)
 }
 
-// EnqueueAll adds all enabled items for a specific task type
-func (s *Service) EnqueueAll(ctx context.Context, taskType string, source string) error {
+// EnqueueStocks adds all enabled items for a specific task type
+func (s *Service) EnqueueStocks(ctx context.Context, taskType string, source string) error {
 	queueName := QueueName(taskType)
 
 	// Check if queue already has items
@@ -73,13 +73,10 @@ func (s *Service) EnqueueAll(ctx context.Context, taskType string, source string
 // GetNext retrieves the next task from the queue
 func (s *Service) GetNext(ctx context.Context, taskType string, timeout int) (*Task, error) {
 	queueName := QueueName(taskType)
-	fmt.Printf("Getting next task for %s queue", queueName)
 	data, err := s.queueSvc.Dequeue(ctx, queueName, timeout)
 	if err != nil {
 		return nil, err
 	}
-
-	fmt.Printf("Got task %s", data)
 
 	if data == nil {
 		return nil, nil

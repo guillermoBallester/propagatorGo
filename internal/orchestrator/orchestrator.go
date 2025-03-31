@@ -40,7 +40,7 @@ func NewOrchestrator(schedulerCfg *config.SchedulerConfig, deps *WorkerDependenc
 func (o *Orchestrator) RegisterWorkerPool(cfg config.WorkerConfig) error {
 	pool := worker.NewPool(cfg.PoolSize)
 
-	err := o.workerDeps.TaskService.EnqueueAll(context.Background(), cfg.TaskType, cfg.Source)
+	err := o.workerDeps.TaskService.EnqueueStocks(context.Background(), cfg.TaskType, cfg.Source)
 	if err != nil {
 		return err
 	}

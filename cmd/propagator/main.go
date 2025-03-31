@@ -6,10 +6,11 @@ import (
 	"os"
 	"os/signal"
 	"propagatorGo/internal/config"
+	"propagatorGo/internal/constants"
 	"propagatorGo/internal/orchestrator"
 	"propagatorGo/internal/queue"
 	scraper "propagatorGo/internal/scrapper"
-	"propagatorGo/internal/stock"
+	"propagatorGo/internal/task"
 	"propagatorGo/internal/worker"
 	"syscall"
 )
@@ -28,33 +29,34 @@ func main() {
 	}
 	defer redisClient.Close()
 
+	s := scraper.NewScraperService(cfg, redisClient)
+	t := task.NewService(cfg, redisClient)
+	f := worker.NewWorkerFactory(s, t)
+
 	deps := &orchestrator.WorkerDependencies{
-		ScraperSvc:  scraper.NewScraperService(cfg, redisClient),
-		RedisClient: redisClient,
-		StockSvc:    stock.NewService(cfg, redisClient),
+		ScraperSvc:    s,
+		TaskService:   t,
+		WorkerFactory: f,
 	}
 
-	// Create orchestrator
-	orch := orchestrator.NewOrchestrator(&cfg.Scheduler, deps)
-
-	regErr := orch.RegisterWorkerPool(orchestrator.WorkerConfig{
-		PoolSize:    4,
-		WorkerType:  worker.ScraperPublisherType,
-		JobName:     "yahoo-scraper",
-		CronExpr:    "0 */30 * * * *",
-		Source:      "yahoo",
-		Description: "Scrapes Yahoo Finance for stock news",
-		Enabled:     true,
+	// Orchestrator
+	o := orchestrator.NewOrchestrator(&cfg.Scheduler, deps)
+	regErr := o.RegisterWorkerPool(config.WorkerConfig{
+		PoolSize:   2,
+		WorkerType: constants.WorkerTypeScraper,
+		JobName:    constants.SourceYahoo + "-" + constants.WorkerTypeScraper,
+		CronExpr:   "0 */30 * * * *",
+		Source:     constants.SourceYahoo,
+		TaskType:   constants.TaskTypeScrape,
+		Enabled:    true,
 	})
 	if regErr != nil {
 		log.Panicf("Error registering Yahoo scraper pool: %v", regErr)
 	}
-
-	// Start the orchestrator
-	orch.Start()
+	o.Start()
 
 	// Run initial jobs
-	if err := orch.RunJob("yahoo-scraper"); err != nil {
+	if err := o.RunJob(constants.SourceYahoo + "-" + constants.WorkerTypeScraper); err != nil {
 		log.Printf("Failed to run news-scraper: %v", err)
 	}
 
@@ -63,5 +65,5 @@ func main() {
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	<-c
 
-	orch.Stop()
+	o.Stop()
 }

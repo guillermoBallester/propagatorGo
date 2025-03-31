@@ -82,6 +82,18 @@ type RedisConfig struct {
 	Password string `json:"password"`
 }
 
+// WorkerConfig defines configuration for a worker pool
+type WorkerConfig struct {
+	PoolSize   int    `json:"poolSize"`
+	WorkerType string `json:"workerType"`
+	JobName    string `json:"jobName"`
+	CronExpr   string `json:"cronExpr"`
+	QueueName  string `json:"queueName,omitempty"`
+	TaskType   string `json:"taskType,omitempty"`
+	Source     string `json:"source,omitempty"`
+	Enabled    bool   `json:"enabled"`
+}
+
 // LoadConfig loads the configuration from a JSON file
 // Returns an error if the file doesn't exist or cannot be parsed
 func LoadConfig(filePath string) (*Config, error) {

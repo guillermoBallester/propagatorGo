@@ -6,6 +6,7 @@ import (
 	"log"
 	"propagatorGo/internal/config"
 	"propagatorGo/internal/constants"
+	"propagatorGo/internal/model"
 	"strings"
 	"sync"
 	"time"
@@ -32,7 +33,7 @@ type SiteConfig struct {
 type NewsScraper struct {
 	config        *config.SiteConfig
 	mainCollector *colly.Collector
-	articles      []ArticleData
+	articles      []model.ArticleData
 	articleMutex  sync.Mutex
 }
 
@@ -61,13 +62,13 @@ func NewNewsScraper(cfg *config.ScraperConfig, siteConfig *config.SiteConfig) (*
 
 	return &NewsScraper{
 		config:        siteConfig,
-		articles:      make([]ArticleData, 0),
+		articles:      make([]model.ArticleData, 0),
 		mainCollector: col,
 	}, nil
 }
 
 // Scrape extracts information from an article preview
-func (s *NewsScraper) Scrape(ctx context.Context, symbol string) ([]ArticleData, error) {
+func (s *NewsScraper) Scrape(ctx context.Context, symbol string) ([]model.ArticleData, error) {
 	s.resetArticles()
 
 	ctxCollector := s.createContextCollector(ctx)

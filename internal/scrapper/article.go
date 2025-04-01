@@ -2,31 +2,23 @@ package scraper
 
 import (
 	"propagatorGo/internal/constants"
+	"propagatorGo/internal/model"
 	"strings"
 	"time"
 
 	"github.com/gocolly/colly"
 )
 
-// ArticleData represents the extracted data from an article
-type ArticleData struct {
-	Title     string
-	URL       string
-	Text      string
-	SiteName  string
-	ScrapedAt time.Time `json:"scraped_at"`
-}
-
 // saveArticle safely adds an article to the collection
-func (s *NewsScraper) saveArticle(article ArticleData) {
+func (s *NewsScraper) saveArticle(article model.ArticleData) {
 	s.articleMutex.Lock()
 	defer s.articleMutex.Unlock()
 
 	s.articles = append(s.articles, article)
 }
 
-func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement) []ArticleData {
-	var articles []ArticleData
+func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement) []model.ArticleData {
+	var articles []model.ArticleData
 
 	e.ForEach("li", func(_ int, li *colly.HTMLElement) {
 		// Yahoo-specific extraction logic...
@@ -35,7 +27,7 @@ func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement) []ArticleData {
 			return
 		}
 
-		article := ArticleData{
+		article := model.ArticleData{
 			SiteName:  constants.SourceYahoo,
 			Title:     li.ChildText("h3"),
 			URL:       li.ChildAttr("a", "href"),
@@ -56,12 +48,12 @@ func (s *NewsScraper) extractYahooArticles(e *colly.HTMLElement) []ArticleData {
 }
 
 // GetArticles returns the collected articles
-func (s *NewsScraper) GetArticles() []ArticleData {
+func (s *NewsScraper) GetArticles() []model.ArticleData {
 	s.articleMutex.Lock()
 	defer s.articleMutex.Unlock()
 
 	// Return a copy to avoid race conditions
-	articlesCopy := make([]ArticleData, len(s.articles))
+	articlesCopy := make([]model.ArticleData, len(s.articles))
 	copy(articlesCopy, s.articles)
 
 	return articlesCopy
@@ -72,5 +64,5 @@ func (s *NewsScraper) resetArticles() {
 	s.articleMutex.Lock()
 	defer s.articleMutex.Unlock()
 
-	s.articles = make([]ArticleData, 0)
+	s.articles = make([]model.ArticleData, 0)
 }

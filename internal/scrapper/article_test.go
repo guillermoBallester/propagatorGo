@@ -1,6 +1,7 @@
 package scraper
 
 import (
+	"propagatorGo/internal/model"
 	"testing"
 	"time"
 )
@@ -8,11 +9,11 @@ import (
 func TestSaveArticle(t *testing.T) {
 	// Initialize scraper
 	s := &NewsScraper{
-		articles: make([]ArticleData, 0),
+		articles: make([]model.ArticleData, 0),
 	}
 
 	// Create test article
-	testArticle := ArticleData{
+	testArticle := model.ArticleData{
 		Title:     "Test Title",
 		URL:       "https://example.com/test",
 		Text:      "Test content",
@@ -37,11 +38,11 @@ func TestSaveArticle(t *testing.T) {
 
 func TestGetArticles(t *testing.T) {
 	s := &NewsScraper{
-		articles: make([]ArticleData, 0),
+		articles: make([]model.ArticleData, 0),
 	}
 
 	// Add test articles
-	testArticles := []ArticleData{
+	testArticles := []model.ArticleData{
 		{
 			Title:     "Article 1",
 			URL:       "https://example.com/1",
@@ -67,7 +68,7 @@ func TestGetArticles(t *testing.T) {
 	}
 
 	origLen := len(s.articles)
-	articles = append(articles, ArticleData{Title: "New Article"})
+	articles = append(articles, model.ArticleData{Title: "New Article"})
 	if len(s.articles) != origLen {
 		t.Error("GetArticles did not return a copy - original was modified")
 	}
@@ -75,10 +76,10 @@ func TestGetArticles(t *testing.T) {
 
 func TestResetArticles(t *testing.T) {
 	s := &NewsScraper{
-		articles: make([]ArticleData, 0),
+		articles: make([]model.ArticleData, 0),
 	}
 
-	testArticle := ArticleData{
+	testArticle := model.ArticleData{
 		Title:     "Test Title",
 		URL:       "https://example.com/test",
 		SiteName:  "TestSite",

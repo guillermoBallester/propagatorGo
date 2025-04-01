@@ -4,47 +4,61 @@ import (
 	"encoding/json"
 	"fmt"
 	"propagatorGo/internal/constants"
-	scraper "propagatorGo/internal/scrapper"
+	"propagatorGo/internal/model"
 	"time"
 )
 
-// Params contains all necessary parameters for a task
-type Params struct {
-	// Generic fields
-	Symbol   string                 `json:"symbol,omitempty"`
-	URL      string                 `json:"url,omitempty"`
-	Source   string                 `json:"source,omitempty"`
-	Metadata map[string]interface{} `json:"metadata,omitempty"`
-}
-
 // Task represents a unit of work in the system
 type Task struct {
-	ID        string    `json:"id,omitempty"`
-	Type      string    `json:"type"`
-	Params    Params    `json:"params"`
-	Priority  int       `json:"priority,omitempty"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        string                 `json:"id,omitempty"`
+	Type      string                 `json:"type"`
+	Params    map[string]interface{} `json:"params"`
+	Priority  int                    `json:"priority,omitempty"`
+	CreatedAt time.Time              `json:"created_at"`
 }
 
-// NewTask creates a task
-func NewTask(symbol string, taskType string, source string) *Task {
+// NewTask creates a new task with basic parameters.
+func NewTask(taskType string) *Task {
 	return &Task{
-		Type: taskType,
-		Params: Params{
-			Symbol: symbol,
-			Source: source,
-		},
+		Type:      taskType,
+		Params:    make(map[string]interface{}),
 		CreatedAt: time.Now(),
 	}
 }
 
+// SetParam sets a parameter for the task
+func (t *Task) SetParam(key string, value interface{}) {
+	t.Params[key] = value
+}
+
+// GetParam retrieves a parameter from the task
+func (t *Task) GetParam(key string) (interface{}, bool) {
+	value, exists := t.Params[key]
+	return value, exists
+}
+
+// GetParamString retrieves a string parameter from the task
+func (t *Task) GetParamString(key string) (string, error) {
+	value, exists := t.Params[key]
+	if !exists {
+		return "", fmt.Errorf("parameter %s not found", key)
+	}
+
+	str, ok := value.(string)
+	if !ok {
+		// Try to convert to string if it's not already
+		return fmt.Sprintf("%v", value), nil
+	}
+	return str, nil
+}
+
 // GetArticle extracts the article from a consume task
-func (t *Task) GetArticle() (*scraper.ArticleData, error) {
+func (t *Task) GetArticle() (*model.ArticleData, error) {
 	if t.Type != constants.TaskTypeConsume {
 		return nil, fmt.Errorf("task is not a consume task")
 	}
 
-	articleData, ok := t.Params.Metadata["article"]
+	articleData, ok := t.Params["article"]
 	if !ok {
 		return nil, fmt.Errorf("article data not found in task")
 	}
@@ -58,7 +72,7 @@ func (t *Task) GetArticle() (*scraper.ArticleData, error) {
 			return nil, fmt.Errorf("failed to marshal article data: %w", err)
 		}
 
-		var article scraper.ArticleData
+		var article model.ArticleData
 		if err := json.Unmarshal(articleJSON, &article); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal article data: %w", err)
 		}
@@ -72,7 +86,7 @@ func (t *Task) GetArticle() (*scraper.ArticleData, error) {
 		return nil, fmt.Errorf("failed to marshal article map: %w", err)
 	}
 
-	var article scraper.ArticleData
+	var article model.ArticleData
 	if err := json.Unmarshal(articleJSON, &article); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal article map: %w", err)
 	}

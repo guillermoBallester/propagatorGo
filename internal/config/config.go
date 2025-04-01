@@ -14,6 +14,16 @@ type Config struct {
 	Scheduler SchedulerConfig `json:"scheduler"`
 	Redis     RedisConfig     `json:"redis"`
 	StockList StockList       `json:"stockList"`
+	Database  DatabaseConfig  `json:"database"`
+}
+
+type DatabaseConfig struct {
+	Host     string `json:"host"`
+	Port     int    `json:"port"`
+	Username string `json:"username"`
+	Password string `json:"password"`
+	Database string `json:"database"`
+	SSLMode  string `json:"sslMode"`
 }
 
 // StockList represents the master list of stocks to be tracked

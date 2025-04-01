@@ -17,7 +17,7 @@ type Task struct {
 	CreatedAt time.Time              `json:"created_at"`
 }
 
-// NewTask creates a new task with basic parameters
+// NewTask creates a new task with basic parameters.
 func NewTask(taskType string) *Task {
 	return &Task{
 		Type:      taskType,

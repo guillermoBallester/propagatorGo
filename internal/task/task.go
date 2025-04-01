@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"propagatorGo/internal/constants"
-	scraper "propagatorGo/internal/scrapper"
+	"propagatorGo/internal/model"
 	"time"
 )
 
@@ -53,7 +53,7 @@ func (t *Task) GetParamString(key string) (string, error) {
 }
 
 // GetArticle extracts the article from a consume task
-func (t *Task) GetArticle() (*scraper.ArticleData, error) {
+func (t *Task) GetArticle() (*model.ArticleData, error) {
 	if t.Type != constants.TaskTypeConsume {
 		return nil, fmt.Errorf("task is not a consume task")
 	}
@@ -72,7 +72,7 @@ func (t *Task) GetArticle() (*scraper.ArticleData, error) {
 			return nil, fmt.Errorf("failed to marshal article data: %w", err)
 		}
 
-		var article scraper.ArticleData
+		var article model.ArticleData
 		if err := json.Unmarshal(articleJSON, &article); err != nil {
 			return nil, fmt.Errorf("failed to unmarshal article data: %w", err)
 		}
@@ -86,7 +86,7 @@ func (t *Task) GetArticle() (*scraper.ArticleData, error) {
 		return nil, fmt.Errorf("failed to marshal article map: %w", err)
 	}
 
-	var article scraper.ArticleData
+	var article model.ArticleData
 	if err := json.Unmarshal(articleJSON, &article); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal article map: %w", err)
 	}

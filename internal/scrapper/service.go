@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"propagatorGo/internal/config"
+	"propagatorGo/internal/model"
 	"propagatorGo/internal/queue"
 	"propagatorGo/internal/task"
 	"sync"
@@ -29,7 +30,7 @@ func NewScraperService(cfg *config.Config, redis *queue.RedisClient, taskSvc *ta
 }
 
 // ScrapeAndPublish performs both scraping and publishing in one operation
-func (s *Service) ScrapeAndPublish(ctx context.Context, source string, symbol string) ([]ArticleData, error) {
+func (s *Service) ScrapeAndPublish(ctx context.Context, source string, symbol string) ([]model.ArticleData, error) {
 	// Get the scraper for this source
 	scraper, err := s.GetScraper(source)
 	if err != nil {

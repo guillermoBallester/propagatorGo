@@ -39,17 +39,17 @@
       }
     ]
   },
+  "redis": {
+    "address": "localhost:6379",
+    "password": ""
+  },
   "database": {
-    "host": "postgres",
+    "host": "localhost",
     "port": 5432,
     "username": "postgres",
     "password": "postgres",
     "database": "propagatorGo",
     "sslMode": "disable"
-  },
-  "redis": {
-    "address": "localhost:6379",
-    "password": ""
   },
   "stockList": {
     "stocks": [

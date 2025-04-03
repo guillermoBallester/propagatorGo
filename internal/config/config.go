@@ -99,7 +99,6 @@ type WorkerConfig struct {
 	JobName    string `json:"jobName"`
 	CronExpr   string `json:"cronExpr"`
 	QueueName  string `json:"queueName,omitempty"`
-	TaskType   string `json:"taskType,omitempty"`
 	Source     string `json:"source,omitempty"`
 	Enabled    bool   `json:"enabled"`
 }

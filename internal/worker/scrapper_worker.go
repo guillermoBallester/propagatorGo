@@ -5,9 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"propagatorGo/internal/constants"
 	scraper "propagatorGo/internal/scrapper"
-	"propagatorGo/internal/task"
 	"time"
 )
 
@@ -15,15 +13,17 @@ import (
 type ScraperWorker struct {
 	BaseWorker
 	scraperService *scraper.Service
-	taskService    *task.Service
+	source         string
+	WorkManager    *WorkManager
 }
 
 // NewScraperWorker creates a new scraper worker
-func NewScraperWorker(bw BaseWorker, scraperSvc *scraper.Service, taskSvc *task.Service) *ScraperWorker {
+func NewScraperWorker(bw BaseWorker, scraperSvc *scraper.Service, wm *WorkManager, source string) *ScraperWorker {
 	return &ScraperWorker{
 		BaseWorker:     bw,
 		scraperService: scraperSvc,
-		taskService:    taskSvc,
+		WorkManager:    wm,
+		source:         source,
 	}
 }
 
@@ -40,32 +40,15 @@ func (w *ScraperWorker) Start(ctx context.Context) error {
 		default:
 			w.Stats.RecordStart()
 
-			nextTask, err := w.taskService.GetNext(ctx, constants.TaskTypeScrape, 5)
-			if err != nil {
-				log.Printf("Error getting task: %v", err)
-				w.Stats.RecordItemFailed()
-				time.Sleep(1 * time.Second)
+			stock := w.WorkManager.GetNextStock()
+			if stock == nil {
+				log.Printf("No stocks available for worker %s", w.Name())
+				time.Sleep(5 * time.Second)
 				continue
 			}
 
-			// If no task returned within timeout, try again
-			if nextTask == nil {
-				continue
-			}
-
-			symbol, err := nextTask.GetParamString("symbol")
-			if err != nil {
-				log.Printf("Error getting symbol from task: %v", err)
-				w.Stats.RecordItemFailed()
-				continue
-			}
-
-			source, err := nextTask.GetParamString("source")
-			if err != nil {
-				log.Printf("Error getting source from task: %v", err)
-				w.Stats.RecordItemFailed()
-				continue
-			}
+			symbol := stock.Symbol
+			source := w.source
 
 			log.Printf("Worker %s processing symbol: %s from source %s",
 				w.Name(), symbol, source)

@@ -40,14 +40,9 @@ func NewOrchestrator(schedulerCfg *config.SchedulerConfig, deps *WorkerDependenc
 func (o *Orchestrator) RegisterWorkerPool(cfg config.WorkerConfig) error {
 	pool := worker.NewPool(cfg.PoolSize)
 
-	err := o.workerDeps.TaskService.EnqueueStocks(context.Background(), cfg.TaskType, cfg.Source)
-	if err != nil {
-		return err
-	}
-
 	// Create and add workers based on type
 	for i := 0; i < cfg.PoolSize; i++ {
-		w, workerErr := o.workerDeps.WorkerFactory.CreateWorker(i, cfg.WorkerType)
+		w, workerErr := o.workerDeps.WorkerFactory.CreateWorker(i, cfg.WorkerType, cfg.Source)
 		if workerErr != nil {
 			return fmt.Errorf("error creating worker: %w", workerErr)
 		}

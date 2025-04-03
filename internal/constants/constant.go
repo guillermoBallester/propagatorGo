@@ -9,7 +9,6 @@ const (
 
 // Task types
 const (
-	TaskTypeScrape  = "scrape"
 	TaskTypeConsume = "consume"
 	TaskTypeAPICall = "api_call"
 )

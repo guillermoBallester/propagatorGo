@@ -15,6 +15,7 @@ import (
 	"propagatorGo/internal/task"
 	"propagatorGo/internal/worker"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -35,18 +36,34 @@ func main() {
 		JobName:    constants.SourceYahoo + "-" + constants.WorkerTypeScraper,
 		CronExpr:   "0 */30 * * * *",
 		Source:     constants.SourceYahoo,
-		TaskType:   constants.TaskTypeScrape,
 		Enabled:    true,
 	})
 	if regErr != nil {
 		log.Panicf("Error registering Yahoo scraper pool: %v", regErr)
 	}
+
+	regErr = o.RegisterWorkerPool(config.WorkerConfig{
+		PoolSize:   2,
+		WorkerType: constants.WorkerTypeConsumer,
+		JobName:    "writer" + constants.WorkerTypeConsumer,
+		CronExpr:   "0 */30 * * * *",
+		Enabled:    true,
+	})
+
 	o.Start()
 
 	// Run initial jobs
 	if err := o.RunJob(constants.SourceYahoo + "-" + constants.WorkerTypeScraper); err != nil {
 		log.Printf("Failed to run news-scraper: %v", err)
 	}
+
+	go func() {
+		log.Printf("Waiting 1 minute before running initial scraper job...")
+		time.Sleep(1 * time.Minute)
+		if err := o.RunJob("writer" + constants.WorkerTypeConsumer); err != nil {
+			log.Printf("Failed to run news-scraper: %v", err)
+		}
+	}()
 
 	// Wait for termination signal
 	c := make(chan os.Signal, 1)
@@ -60,7 +77,7 @@ func initWorkingDependencies(cfg *config.Config, dbClient *database.PostgresClie
 	t := task.NewService(cfg, redisClient)
 	r := repository.NewArticleRepository(dbClient.GetDB())
 	s := scraper.NewScraperService(cfg, redisClient, t)
-	f := worker.NewWorkerFactory(s, t, r)
+	f := worker.NewWorkerFactory(cfg, s, t, r)
 
 	return &orchestrator.WorkerDependencies{
 		ScraperSvc:    s,
@@ -74,13 +91,13 @@ func initDB(cfg *config.Config) (*database.PostgresClient, *queue.RedisClient) {
 	if err != nil {
 		log.Fatalf("Failed to initialize database client: %v", err)
 	}
-	defer dbClient.Close()
+	//defer dbClient.Close()
 
 	redisClient, err := queue.NewRedisClient(cfg.Redis)
 	if err != nil {
 		log.Fatalf("Failed to initialize Redis client: %v", err)
 	}
-	defer redisClient.Close()
+	//defer redisClient.Close()
 
 	return dbClient, redisClient
 }

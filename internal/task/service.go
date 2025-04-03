@@ -100,14 +100,6 @@ func (s *Service) GetNext(ctx context.Context, taskType string, timeout int) (*T
 	return &task, nil
 }
 
-// CreateScrapeTask creates a new scrape task for a given symbol and source
-func (s *Service) CreateScrapeTask(symbol, source string) *Task {
-	task := NewTask(constants.TaskTypeScrape)
-	task.SetParam("symbol", symbol)
-	task.SetParam("source", source)
-	return task
-}
-
 // CreateConsumeTask creates a new consume task with article data
 func (s *Service) CreateConsumeTask(symbol, source string, article interface{}) *Task {
 	task := NewTask(constants.TaskTypeConsume)

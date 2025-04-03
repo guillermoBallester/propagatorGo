@@ -1,4 +1,4 @@
-# StockAlpha
+# PropagatorGo
 
 PropagatorGo is a Go-based system for scraping, processing, and storing financial news articles related to specific stock symbols. The application uses a worker pool architecture to efficiently collect news from various sources (currently Yahoo Finance), store them in a PostgreSQL database, and make them available through a RESTful API.
 

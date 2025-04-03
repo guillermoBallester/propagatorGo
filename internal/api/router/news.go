@@ -13,8 +13,8 @@ func RegisterNewsRoutes(r *mux.Router, articleRepo *repository.ExtArticleRepo) {
 	newsHandler := handlers.NewNewsHandler(articleRepo)
 
 	// GET /stocks/{symbol}/news - News for a specific stock
-	r.HandleFunc("/stocks/{symbol}/news", newsHandler.GetArticlesBySymbol).Methods(http.MethodGet)
+	r.HandleFunc("/stocks/{symbol}/news", newsHandler.GetBySymbol).Methods(http.MethodGet)
 
 	// GET /sources/{site}/news - News from a specific source
-	r.HandleFunc("/sources/{site}/news", newsHandler.GetArticlesBySite).Methods(http.MethodGet)
+	r.HandleFunc("/sources/{site}/news", newsHandler.GetBySite).Methods(http.MethodGet)
 }

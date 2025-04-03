@@ -11,12 +11,10 @@ import (
 )
 
 // Setup configures the main application router with all routes
-func Setup(cfg *config.Config, articleRepo *repository.ArticleRepository) *mux.Router {
+func Setup(cfg *config.Config, articleRepo *repository.ExtArticleRepo) *mux.Router {
 	r := mux.NewRouter()
 
 	// Apply global middleware
-	r.Use(middleware.Logging)
-	r.Use(middleware.Recovery)
 	r.Use(middleware.CORS)
 
 	// Create API subrouter with version prefix
@@ -24,8 +22,6 @@ func Setup(cfg *config.Config, articleRepo *repository.ArticleRepository) *mux.R
 
 	// Register route groups
 	RegisterNewsRoutes(api, articleRepo)
-	RegisterInsiderRoutes(api)
-	RegisterStockRoutes(api)
 
 	// Health check endpoint
 	api.HandleFunc("/health", healthCheckHandler).Methods(http.MethodGet)

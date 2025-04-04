@@ -18,19 +18,19 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-          cache: true
-
-      - name: Install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
-          golangci-lint --version
+          check-latest: true
 
       - name: Go mod tidy
         run: go mod tidy
 
-      - name: Lint with skip
-        run: |  
-          GOOS=linux GOARCH=amd64 golangci-lint run --timeout=5m --skip-dirs-use-default --skip-dirs=vendor,third_party cmd/... internal/...
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v3
+        with:
+          version: v1.54.2
+          args: --timeout=5m --out-format=colored-line-number
+          only-new-issues: true
+          skip-pkg-cache: true
+          skip-build-cache: true
 
   build:
     name: Build
@@ -43,7 +43,7 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.21'
-          cache: true
+          check-latest: true
 
       - name: Go mod tidy
         run: go mod tidy

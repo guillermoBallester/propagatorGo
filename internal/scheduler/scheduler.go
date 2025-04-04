@@ -4,9 +4,10 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"propagatorGo/internal/config"
 	"sync"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
 
 	"github.com/robfig/cron/v3"
 )

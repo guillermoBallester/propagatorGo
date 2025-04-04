@@ -5,8 +5,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	scraper "propagatorGo/internal/scrapper"
 	"time"
+
+	scraper "github.com/guillermoballester/propagatorGo/internal/scrapper"
 )
 
 // ScraperWorker scrapes websites and publishes to Redis

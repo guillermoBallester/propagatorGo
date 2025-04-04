@@ -5,17 +5,18 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/constants"
-	"propagatorGo/internal/database"
-	"propagatorGo/internal/orchestrator"
-	"propagatorGo/internal/queue"
-	"propagatorGo/internal/repository"
-	scraper "propagatorGo/internal/scrapper"
-	"propagatorGo/internal/task"
-	"propagatorGo/internal/worker"
 	"syscall"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+	"github.com/guillermoballester/propagatorGo/internal/database"
+	"github.com/guillermoballester/propagatorGo/internal/orchestrator"
+	"github.com/guillermoballester/propagatorGo/internal/queue"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
+	scraper "github.com/guillermoballester/propagatorGo/internal/scrapper"
+	"github.com/guillermoballester/propagatorGo/internal/task"
+	"github.com/guillermoballester/propagatorGo/internal/worker"
 )
 
 func main() {

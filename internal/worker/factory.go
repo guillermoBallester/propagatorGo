@@ -2,11 +2,12 @@ package worker
 
 import (
 	"fmt"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/constants"
-	"propagatorGo/internal/repository"
-	scraper "propagatorGo/internal/scrapper"
-	"propagatorGo/internal/task"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
+	scraper "github.com/guillermoballester/propagatorGo/internal/scrapper"
+	"github.com/guillermoballester/propagatorGo/internal/task"
 )
 
 // Factory creates workers based on configuration

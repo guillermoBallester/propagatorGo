@@ -1,15 +1,15 @@
-// consumer_worker.go
 package worker
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"propagatorGo/internal/constants"
-	"propagatorGo/internal/database"
-	"propagatorGo/internal/repository"
-	"propagatorGo/internal/task"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+	"github.com/guillermoballester/propagatorGo/internal/database"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
+	"github.com/guillermoballester/propagatorGo/internal/task"
 )
 
 // ConsumerWorker consumes messages from Redis and stores in the database

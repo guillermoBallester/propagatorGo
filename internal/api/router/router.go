@@ -2,16 +2,17 @@ package router
 
 import (
 	"net/http"
-	"propagatorGo/internal/api/middleware"
-	"propagatorGo/internal/api/response"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/repository"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/middleware"
+	"github.com/guillermoballester/propagatorGo/internal/api/response"
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
 
 	"github.com/gorilla/mux"
 )
 
 // Setup configures the main application router with all routes
-func Setup(cfg *config.Config, articleRepo *repository.ExtArticleRepo) *mux.Router {
+func Setup(cfg *config.Config, articleRepo *repository.ArticleRepository) *mux.Router {
 	r := mux.NewRouter()
 
 	// Apply global middleware
@@ -33,7 +34,7 @@ func Setup(cfg *config.Config, articleRepo *repository.ExtArticleRepo) *mux.Rout
 }
 
 // healthCheckHandler provides a simple health check endpoint
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
 	response.JSON(w, map[string]string{
 		"status":    "ok",
 		"timestamp": http.TimeFormat,
@@ -42,6 +43,6 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // notFoundHandler provides a custom 404 response
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+func notFoundHandler(w http.ResponseWriter, _ *http.Request) {
 	response.NotFound(w, "The requested resource could not be found")
 }

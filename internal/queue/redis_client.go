@@ -5,8 +5,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"propagatorGo/internal/config"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
 
 	"github.com/go-redis/redis/v8"
 )

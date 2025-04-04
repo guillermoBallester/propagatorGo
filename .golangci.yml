@@ -1,6 +1,10 @@
 run:
   timeout: 5m
   tests: true
+  build-tags: []
+
+  skip-dirs:
+    - vendor
 
 linters:
   enable:
@@ -20,10 +24,20 @@ linters-settings:
   errcheck:
     check-type-assertions: true
   goimports:
-    local-prefixes: github.com/guillermoballester/stockalpha
+    local-prefixes: github.com/guillermoballester/propagatorGo
+  govet:
+    check-shadowing: true
+  revive:
+    confidence: 0.8
+  unused:
+    check-exported: false
 
 issues:
   exclude-rules:
     - path: _test\.go
       linters:
         - gosec
+  # Maximum issues count per one linter
+  max-issues-per-linter: 0
+  # Maximum count of issues with the same text
+  max-same-issues: 0

@@ -3,10 +3,9 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/database/sqlc"
 
-	_ "github.com/lib/pq"
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/database/sqlc"
 )
 
 // PostgresClient handles database operations

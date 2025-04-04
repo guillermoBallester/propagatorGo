@@ -1,8 +1,9 @@
 package worker
 
 import (
-	"propagatorGo/internal/config"
 	"sync"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
 )
 
 // WorkManager manages the distribution of stocks to workers

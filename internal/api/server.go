@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"propagatorGo/internal/api/router"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/repository"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/router"
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
 
 	"github.com/gorilla/mux"
 )
@@ -18,11 +19,11 @@ type Server struct {
 	httpServer  *http.Server
 	router      *mux.Router
 	config      *config.Config
-	articleRepo *repository.ExtArticleRepo
+	articleRepo *repository.ArticleRepository
 }
 
 // NewServer creates a new API server
-func NewServer(cfg *config.Config, articleRepo *repository.ExtArticleRepo) *Server {
+func NewServer(cfg *config.Config, articleRepo *repository.ArticleRepository) *Server {
 	r := router.Setup(cfg, articleRepo)
 
 	addr := fmt.Sprintf(":%d", cfg.App.Port)

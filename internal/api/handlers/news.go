@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"net/http"
-	"propagatorGo/internal/api/response"
-	"propagatorGo/internal/database"
-	"propagatorGo/internal/repository"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/response"
+	"github.com/guillermoballester/propagatorGo/internal/database"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
 
 	"github.com/gorilla/mux"
 )
@@ -13,23 +14,23 @@ import (
 // NewsHandler handles news-related API requests
 type NewsHandler struct {
 	BaseHandler
-	articleRepo *repository.ExtArticleRepo
+	articleRepo *repository.ArticleRepository
 }
 
 // ArticleResponse represents the article data sent to the client
 type ArticleResponse struct {
-	ID        int64  `json:"id"`
-	Title     string `json:"title"`
-	URL       string `json:"url"`
-	Text      string `json:"text,omitempty"`
-	SiteName  string `json:"site_name"`
-	Symbol    string `json:"symbol"`
-	ScrapedAt string `json:"scraped_at"`
-	CreatedAt string `json:"created_at"`
+	ID        int64     `json:"id"`
+	Title     string    `json:"title"`
+	URL       string    `json:"url"`
+	Text      string    `json:"text,omitempty"`
+	SiteName  string    `json:"site_name"`
+	Symbol    string    `json:"symbol"`
+	ScrapedAt time.Time `json:"scraped_at"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
 // NewNewsHandler creates a new news handler
-func NewNewsHandler(repo *repository.ExtArticleRepo) *NewsHandler {
+func NewNewsHandler(repo *repository.ArticleRepository) *NewsHandler {
 	return &NewsHandler{
 		articleRepo: repo,
 	}
@@ -110,8 +111,8 @@ func mapArticleToResponse(article database.Article) ArticleResponse {
 		Text:      article.Text,
 		SiteName:  article.SiteName,
 		Symbol:    article.Symbol,
-		ScrapedAt: article.ScrapedAt.Format(time.RFC3339),
-		CreatedAt: article.CreatedAt.Format(time.RFC3339),
+		ScrapedAt: article.ScrapedAt,
+		CreatedAt: article.CreatedAt,
 	}
 }
 

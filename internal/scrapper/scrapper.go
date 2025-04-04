@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/constants"
-	"propagatorGo/internal/model"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+	"github.com/guillermoballester/propagatorGo/internal/model"
 
 	"github.com/gocolly/colly"
 )
@@ -89,9 +90,7 @@ func (s *NewsScraper) Scrape(ctx context.Context, symbol string) ([]model.Articl
 // buildURL replaces template parameters in the URL
 func (s *NewsScraper) buildURL(symbol string) string {
 	url := s.config.URL
-	if strings.Contains(url, "&1") {
-		url = strings.Replace(url, "&1", symbol, -1)
-	}
+	url = strings.Replace(url, "&1", symbol, -1)
 
 	return url
 }

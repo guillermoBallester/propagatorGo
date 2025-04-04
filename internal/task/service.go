@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/constants"
+
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
 )
 
 // QueueService defines the minimum interface needed for task queue operations

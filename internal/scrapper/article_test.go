@@ -1,9 +1,10 @@
 package scraper
 
 import (
-	"propagatorGo/internal/model"
 	"testing"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/model"
 )
 
 func TestSaveArticle(t *testing.T) {

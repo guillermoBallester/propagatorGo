@@ -3,11 +3,13 @@ package scraper
 import (
 	"context"
 	"fmt"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/model"
-	"propagatorGo/internal/queue"
-	"propagatorGo/internal/task"
 	"sync"
+
+	"github.com/guillermoballester/propagatorGo/internal/task"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/model"
+	"github.com/guillermoballester/propagatorGo/internal/queue"
 )
 
 // Service manages scrapers for different sources

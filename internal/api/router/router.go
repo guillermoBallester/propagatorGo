@@ -11,7 +11,7 @@ import (
 )
 
 // Setup configures the main application router with all routes
-func Setup(cfg *config.Config, articleRepo *repository.ExtArticleRepo) *mux.Router {
+func Setup(cfg *config.Config, articleRepo *repository.ArticleRepository) *mux.Router {
 	r := mux.NewRouter()
 
 	// Apply global middleware
@@ -33,7 +33,7 @@ func Setup(cfg *config.Config, articleRepo *repository.ExtArticleRepo) *mux.Rout
 }
 
 // healthCheckHandler provides a simple health check endpoint
-func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
+func healthCheckHandler(w http.ResponseWriter, _ *http.Request) {
 	response.JSON(w, map[string]string{
 		"status":    "ok",
 		"timestamp": http.TimeFormat,
@@ -42,6 +42,6 @@ func healthCheckHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // notFoundHandler provides a custom 404 response
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
+func notFoundHandler(w http.ResponseWriter, _ *http.Request) {
 	response.NotFound(w, "The requested resource could not be found")
 }

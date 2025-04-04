@@ -18,11 +18,11 @@ type Server struct {
 	httpServer  *http.Server
 	router      *mux.Router
 	config      *config.Config
-	articleRepo *repository.ExtArticleRepo
+	articleRepo *repository.ArticleRepository
 }
 
 // NewServer creates a new API server
-func NewServer(cfg *config.Config, articleRepo *repository.ExtArticleRepo) *Server {
+func NewServer(cfg *config.Config, articleRepo *repository.ArticleRepository) *Server {
 	r := router.Setup(cfg, articleRepo)
 
 	addr := fmt.Sprintf(":%d", cfg.App.Port)

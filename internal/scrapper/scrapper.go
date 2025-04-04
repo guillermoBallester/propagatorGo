@@ -89,9 +89,7 @@ func (s *NewsScraper) Scrape(ctx context.Context, symbol string) ([]model.Articl
 // buildURL replaces template parameters in the URL
 func (s *NewsScraper) buildURL(symbol string) string {
 	url := s.config.URL
-	if strings.Contains(url, "&1") {
-		url = strings.Replace(url, "&1", symbol, -1)
-	}
+	url = strings.Replace(url, "&1", symbol, -1)
 
 	return url
 }

@@ -1,4 +1,3 @@
-// consumer_worker.go
 package worker
 
 import (

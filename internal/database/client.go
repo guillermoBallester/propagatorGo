@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"propagatorGo/internal/config"
 	"propagatorGo/internal/database/sqlc"
-
-	_ "github.com/lib/pq"
 )
 
 // PostgresClient handles database operations

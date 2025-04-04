@@ -3,9 +3,10 @@ package task
 import (
 	"encoding/json"
 	"fmt"
-	"propagatorGo/internal/constants"
-	"propagatorGo/internal/model"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+	"github.com/guillermoballester/propagatorGo/internal/model"
 )
 
 // Task represents a unit of work in the system

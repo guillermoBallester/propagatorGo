@@ -2,10 +2,11 @@ package handlers
 
 import (
 	"net/http"
-	"propagatorGo/internal/api/response"
-	"propagatorGo/internal/database"
-	"propagatorGo/internal/repository"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/response"
+	"github.com/guillermoballester/propagatorGo/internal/database"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
 
 	"github.com/gorilla/mux"
 )

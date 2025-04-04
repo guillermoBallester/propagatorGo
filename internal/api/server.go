@@ -5,10 +5,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"propagatorGo/internal/api/router"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/repository"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/router"
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
 
 	"github.com/gorilla/mux"
 )

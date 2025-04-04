@@ -1,10 +1,11 @@
 package scraper
 
 import (
-	"propagatorGo/internal/constants"
-	"propagatorGo/internal/model"
 	"strings"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+	"github.com/guillermoballester/propagatorGo/internal/model"
 
 	"github.com/gocolly/colly"
 )

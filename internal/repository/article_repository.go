@@ -5,8 +5,9 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"propagatorGo/internal/database"
-	"propagatorGo/internal/database/sqlc"
+
+	"github.com/guillermoballester/propagatorGo/internal/database"
+	"github.com/guillermoballester/propagatorGo/internal/database/sqlc"
 )
 
 // ArticleRepository handles database operations for articles

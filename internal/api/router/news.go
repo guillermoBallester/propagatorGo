@@ -2,8 +2,9 @@ package router
 
 import (
 	"net/http"
-	"propagatorGo/internal/api/handlers"
-	"propagatorGo/internal/repository"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/handlers"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
 
 	"github.com/gorilla/mux"
 )

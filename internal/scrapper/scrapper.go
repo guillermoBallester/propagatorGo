@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/constants"
-	"propagatorGo/internal/model"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/constants"
+	"github.com/guillermoballester/propagatorGo/internal/model"
 
 	"github.com/gocolly/colly"
 )

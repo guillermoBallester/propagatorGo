@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"net/http"
-	"propagatorGo/internal/api/response"
 	"strconv"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/response"
 )
 
 // BaseHandler provides common functionality for all handlers

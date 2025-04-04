@@ -4,12 +4,13 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/scheduler"
-	scraper "propagatorGo/internal/scrapper"
-	"propagatorGo/internal/task"
-	"propagatorGo/internal/worker"
 	"time"
+
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/scheduler"
+	scraper "github.com/guillermoballester/propagatorGo/internal/scrapper"
+	"github.com/guillermoballester/propagatorGo/internal/task"
+	"github.com/guillermoballester/propagatorGo/internal/worker"
 )
 
 // Orchestrator manages worker pools and schedules their execution

@@ -2,10 +2,11 @@ package router
 
 import (
 	"net/http"
-	"propagatorGo/internal/api/middleware"
-	"propagatorGo/internal/api/response"
-	"propagatorGo/internal/config"
-	"propagatorGo/internal/repository"
+
+	"github.com/guillermoballester/propagatorGo/internal/api/middleware"
+	"github.com/guillermoballester/propagatorGo/internal/api/response"
+	"github.com/guillermoballester/propagatorGo/internal/config"
+	"github.com/guillermoballester/propagatorGo/internal/repository"
 
 	"github.com/gorilla/mux"
 )

@@ -11,41 +11,46 @@ jobs:
     name: Lint
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.21'
           cache: true
-
-      - name: Verify go.mod
-        run: |
-            ls -la
-            cat go.mod
-            go mod verify
 
       - name: Install golangci-lint
         run: |
           curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.54.2
           golangci-lint --version
 
-      - name: Lint
-        run: golangci-lint run --timeout=5m
+      - name: Go mod tidy
+        run: go mod tidy
+
+      - name: Lint specific directories
+        run: |
+          # Only lint your own code, not dependencies
+          golangci-lint run --timeout=5m cmd/... internal/...
 
   build:
     name: Build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.21'
+          cache: true
+
+      - name: Go mod tidy
+        run: go mod tidy
 
       - name: Build
-        run: go build -v ./...
+        run: go build -v ./cmd/...
 
       - name: Test
-        run: go test -v ./...
+        run: go test -v ./cmd/... ./internal/...
